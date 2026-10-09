@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ตัวอย่างร่างเอกสารกฎหมาย | lawyerthaiai.com</title>
-<meta name="description" content="AI ช่วยร่างคำฟ้องและคำให้การ ลงแบบพิมพ์ศาลพร้อมเลขหน้า โดยทนายคิว">
-<meta property="og:title" content="ตัวอย่างร่างเอกสารกฎหมาย — AI ช่วยร่างคำฟ้อง คำให้การ ลงแบบพิมพ์ศาล โดยทนายคิว">
+<meta name="description" content="AI ช่วยร่างคำฟ้องและคำให้การ ลงแบบพิมพ์ศาลพร้อมเลขหน้า">
+<meta property="og:title" content="ตัวอย่างร่างเอกสารกฎหมาย — AI ช่วยร่างคำฟ้อง คำให้การ ลงแบบพิมพ์ศาล">
 <meta property="og:description" content="AI ช่วยร่างคำฟ้องและคำให้การ ลงแบบพิมพ์ศาลพร้อมเลขหน้า">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap">
@@ -15,7 +15,7 @@
 <header class="site-head">
   <div class="wrap">
     <a class="logo" href="/"><span class="logo-mark">AI</span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a>
-    <nav class="nav" aria-label="เมนู"><a href="#tools">เครื่องมือ</a><a href="#about">เกี่ยวกับ</a></nav>
+    <nav class="nav" aria-label="เมนู"><a href="#tools">เครื่องมือ</a></nav>
   </div>
 </header>
 
@@ -26,10 +26,6 @@
       <h1>ตัวอย่างร่าง<em>เอกสารกฎหมาย</em> ด้วย AI ลงแบบพิมพ์ศาลให้ครบ</h1>
       <p class="lead">อัปโหลดเอกสารหรือกรอกข้อเท็จจริง AI ช่วยร่างคำฟ้องและคำให้การ แล้วกรอกลงแบบพิมพ์ศาลพร้อมเลขหน้า ผู้ใช้ตรวจแก้ได้ทุกบรรทัดก่อนดาวน์โหลด</p>
       <div class="cta"><a class="btn primary" href="#tools">ดูเครื่องมือทั้งหมด</a><a class="btn" href="/complaint/">เริ่มร่างคำฟ้อง</a></div>
-      <div class="byline">
-        <span class="avatar" data-avatar></span>
-        <div><b>จัดทำโดย <span data-site="nickname"></span></b><span data-site="role"></span></div>
-      </div>
     </div>
     <div class="papers" aria-hidden="true">
       <div class="sheet a"><i class="t"></i><i></i><i class="m"></i><i></i><i class="s"></i><i></i><i class="m"></i></div>
@@ -43,7 +39,7 @@
   </div>
 </section>
 
-<main class="wrap">
+<main class="wrap" style="padding-bottom:56px">
   <div class="points">
     <div class="point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg><div><b>เสร็จเร็ว</b><span>AI ร่าง ลงแบบพิมพ์ศาล ดาวน์โหลด จบในไม่กี่นาที</span></div></div>
     <div class="point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg><div><b>ใช้บนมือถือได้</b><span>เปิดในเบราว์เซอร์ ไม่ต้องติดตั้งแอป</span></div></div>
@@ -57,22 +53,11 @@
   </div>
   <div class="grid" id="grid" aria-live="polite"></div>
 
-  <section class="about" id="about">
-    <span class="avatar" data-avatar></span>
-    <div>
-      <small>ผู้จัดทำ</small>
-      <h2 data-site="nickname"></h2>
-      <div class="full" data-site="fullName"></div>
-      <div class="role" data-site="role"></div>
-      <p data-site="about"></p>
-      <div class="links" id="links"></div>
-    </div>
-  </section>
 </main>
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>© <span id="yr"></span> ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com · จัดทำโดย <span data-site="nickname"></span></span>
+    <span>© <span id="yr"></span> ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com</span>
     <span>ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</span>
   </div>
 </footer>
@@ -80,16 +65,7 @@
 <script src="apps.js"></script>
 <script>
 (function(){
-  const S=window.SITE||{},apps=window.APPS||[];
-  /* owner details */
-  document.querySelectorAll('[data-site]').forEach(el=>{const v=S[el.dataset.site];if(v)el.textContent=v;else el.hidden=true});
-  const initials=(S.nickname||'AI').replace(/^ทนาย/,'').slice(0,3);
-  document.querySelectorAll('[data-avatar]').forEach(a=>{
-    a.textContent=initials;
-    if(S.photo){const im=new Image();im.alt=S.nickname||'';im.onload=()=>{a.textContent='';a.append(im)};im.src=S.photo}
-  });
-  const links=document.getElementById('links');
-  (S.links||[]).forEach(l=>{const a=document.createElement('a');a.href=l.href;a.textContent=l.label;a.target='_blank';a.rel='noopener';links.append(a)});
+  const apps=window.APPS||[];
   document.getElementById('yr').textContent=new Date().getFullYear()+543;
 
   /* tools */
