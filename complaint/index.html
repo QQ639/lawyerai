@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>AI ร่างฟ้องกู้ยืมเงิน</title>
-<meta name="description" content="อัปโหลดสัญญากู้ยืมเงิน แล้ว AI ช่วยร่างคำฟ้อง คำขอท้ายคำฟ้อง ใบแต่งทนายความ และคำร้องขอส่งหมาย ลงแบบพิมพ์ศาลพร้อมเลขหน้า">
+<title>AI ร่างคำฟ้องคดีแพ่ง</title>
+<meta name="description" content="อัปโหลดเอกสารหรือกรอกข้อเท็จจริงเอง แล้ว AI ช่วยร่างคำฟ้อง คำขอท้ายคำฟ้อง ใบแต่งทนายความ และคำร้องขอส่งหมาย ลงแบบพิมพ์ศาลพร้อมเลขหน้า">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap">
 <link rel="stylesheet" href="../style.css">
@@ -71,6 +71,19 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 .pages figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .pages canvas{display:block;width:100%;height:auto}
 .pages figcaption{font-size:13px;color:var(--muted);padding:6px 10px;border-top:1px solid var(--line)}
+.tabs{display:flex;gap:6px;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;margin:0 0 16px}
+.tab{flex:1;font:inherit;font-size:15px;font-weight:600;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(23,32,46,.12)}
+.names{display:grid;gap:8px;margin-bottom:8px}
+.nm{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px}
+.nm input{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-height:46px;width:100%}
+.nm button,.rm{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:15px}
+.rm{width:auto;height:36px;border-radius:8px;padding:0 12px;font:inherit;font-size:14px;margin-left:auto}
+.add{font:inherit;font-size:15px;font-weight:600;color:var(--ink);background:var(--ink-soft);border:1px dashed var(--ink);border-radius:10px;min-height:44px;padding:8px 14px;cursor:pointer;margin-top:10px}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.seg label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer;font-size:15px}
+.seg label:has(input:checked){border-color:var(--ink);background:var(--ink-soft);color:var(--ink)}
+.seg input{accent-color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
 @media (max-width:640px){.grid2,.grid3,.grid4{grid-template-columns:1fr 1fr}.span2{grid-column:1/-1}.panel{padding:18px 14px}.card{padding:14px 12px}.att{grid-template-columns:56px 78px minmax(0,1fr) 40px;gap:8px}.pages{grid-template-columns:1fr}}
 </style>
@@ -80,13 +93,13 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 
 <main class="page">
   <a class="back" href="/">← เครื่องมือทั้งหมด</a>
-  <h1 class="title">AI ร่างฟ้องคดีผิดสัญญากู้ยืมเงิน</h1>
-  <p class="sub">อัปโหลดสัญญากู้ยืมเงินและเอกสารที่เกี่ยวข้อง AI จะอ่านข้อมูล ร่างคำฟ้อง คำขอท้ายคำฟ้อง และคำร้องขอส่งหมาย แล้วกรอกลงแบบพิมพ์ศาล (๔) (๔๐ ก.) (๕) (๙) (๗) พร้อมเลขหน้าและเอกสารท้ายคำฟ้อง</p>
+  <h1 class="title">AI ร่างคำฟ้องคดีแพ่ง</h1>
+  <p class="sub">อัปโหลดสัญญาและเอกสารที่เกี่ยวข้อง หรือกรอกข้อเท็จจริงเองโดยไม่ต้องมีไฟล์ AI จะช่วย ร่างคำฟ้อง คำขอท้ายคำฟ้อง และคำร้องขอส่งหมาย แล้วกรอกลงแบบพิมพ์ศาล (๔) (๔๐ ก.) (๕) (๙) (๗) พร้อมเลขหน้าและเอกสารท้ายคำฟ้อง</p>
   <div class="warn" role="note"><b>ร่างที่ได้อาจยังไม่สมบูรณ์ ผู้ใช้ต้องตรวจข้อเท็จจริง ตัวเลข และเขตอำนาจศาลก่อนยื่นทุกครั้ง</b><br>
   ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</div>
   <span class="trial" id="trial">ช่วงทดลองใช้</span>
 
-  <div class="steps" id="steps"><span data-s="1">๑ ลงทะเบียน</span><span data-s="2">๒ อัปโหลดเอกสาร</span><span data-s="3">๓ ตรวจข้อมูล</span><span data-s="4">๔ ตรวจร่างและพิมพ์</span></div>
+  <div class="steps" id="steps"><span data-s="1">๑ ลงทะเบียน</span><span data-s="2">๒ เริ่มคดี</span><span data-s="3">๓ ตรวจข้อมูล</span><span data-s="4">๔ ตรวจร่างและพิมพ์</span></div>
 
   <!-- step 1 -->
   <section class="panel" id="s1" hidden>
@@ -108,15 +121,30 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 
   <!-- step 2 -->
   <section class="panel" id="s2" hidden>
-    <h2>อัปโหลดเอกสาร</h2>
-    <p class="hint">สัญญากู้ยืมเงิน หนังสือบอกกล่าวทวงถาม ใบตอบรับไปรษณีย์ ฯลฯ ถ่ายภาพให้ชัด ตรง ไม่มีเงา หรือใช้ไฟล์ PDF สูงสุด 12 ไฟล์ ไฟล์เหล่านี้จะใช้เป็นเอกสารท้ายคำฟ้องด้วย</p>
+    <h2>เริ่มคดีใหม่</h2>
+    <div class="tabs" role="tablist"><button class="tab on" type="button" id="tabUp" role="tab" aria-selected="true">อัปโหลดเอกสาร</button><button class="tab" type="button" id="tabMan" role="tab" aria-selected="false">กรอกเอง ไม่มีไฟล์</button></div>
+    <div id="paneUp">
+    <p class="hint">สัญญา หนังสือบอกกล่าวทวงถาม ใบตอบรับไปรษณีย์ ฯลฯ ถ่ายภาพให้ชัด ตรง ไม่มีเงา หรือใช้ไฟล์ PDF สูงสุด 12 ไฟล์ ไฟล์เหล่านี้จะใช้เป็นเอกสารท้ายคำฟ้องด้วย</p>
     <div class="drop" id="drop">
       <b>ลากไฟล์มาวางที่นี่</b><span>ภาพ JPG / PNG หรือ PDF</span>
       <span class="btn file-btn">เลือกไฟล์ / ถ่ายภาพ<input id="fileIn" type="file" accept="image/*,application/pdf" multiple></span>
     </div>
     <div id="fileList" style="margin-top:12px"></div>
     <div class="row"><button class="btn primary" id="readBtn" disabled>ให้ AI อ่านเอกสาร</button><span class="status" id="quota"></span></div>
-    <div class="busy" id="busy2" hidden><span class="spin"></span><span>AI กำลังอ่านเอกสาร ใช้เวลาประมาณ 20–60 วินาที</span></div>
+    </div>
+    <div id="paneMan" hidden>
+      <p class="hint">กรอกเท่าที่มี ที่อยู่และรายละเอียดอื่นเติมได้ในขั้นถัดไป</p>
+      <p class="sec">โจทก์ <span class="req">*</span></p><div class="names" id="mP"></div><button class="add" type="button" id="addMP">+ เพิ่มโจทก์</button>
+      <p class="sec">จำเลย <span class="req">*</span></p><div class="names" id="mD"></div><button class="add" type="button" id="addMD">+ เพิ่มจำเลย</button>
+      <div class="grid2" style="margin-top:16px">
+        <label class="f full">ข้อหา <span class="req">*</span><input id="mCharge" placeholder="เช่น ผิดสัญญากู้ยืมเงิน, ผิดสัญญาเช่า, ละเมิด เรียกค่าเสียหาย"></label>
+        <label class="f">ยอดเงินที่ฟ้อง (บาท)<input id="mAmt" inputmode="decimal" placeholder="เช่น ๑๒๐,๕๐๐.๐๐"></label>
+        <label class="f">ที่มาของยอด (ถ้ามี)<input id="mNote" placeholder="เช่น เงินต้น ๑๐๐,๐๐๐ ดอกเบี้ย ๒๐,๕๐๐"></label>
+        <label class="f full">รายละเอียด / ข้อเท็จจริง <span class="req">*</span><textarea id="mFacts" rows="7" placeholder="เล่าเรื่องตามลำดับเวลา เช่น ทำสัญญาอะไร เมื่อไร ที่ไหน ตกลงกันอย่างไร ผิดสัญญาอย่างไร ทวงถามแล้วหรือยัง เสียหายเท่าไร"></textarea></label>
+      </div>
+      <div class="row"><button class="btn primary" id="manBtn">ถัดไป</button><span class="status" id="quota2"></span></div>
+    </div>
+    <div class="busy" id="busy2" hidden><span class="spin"></span><span id="busy2t">AI กำลังอ่านเอกสาร ใช้เวลาประมาณ 20–60 วินาที</span></div>
     <div class="err" id="err2" hidden></div>
   </section>
 
@@ -129,18 +157,25 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
       <label class="f">วันที่ยื่นฟ้อง <span class="req">*</span><input id="cDate" type="date"></label>
     </div>
 
-    <div class="card" id="cardP"></div>
-    <div class="card" id="cardD"></div>
+    <div id="partiesP"></div><button class="add" type="button" id="addP">+ เพิ่มโจทก์</button>
+    <div id="partiesD"></div><button class="add" type="button" id="addD">+ เพิ่มจำเลย</button>
+    <div class="grid2" style="margin-top:14px"><label class="f full">ข้อหาหรือฐานความผิด<input id="cCharge" placeholder="เช่น ผิดสัญญากู้ยืมเงิน"></label>
+      <label class="check full"><input type="checkbox" id="cSmall" checked><span>คดีมโนสาเร่หรือคดีไม่มีข้อยุ่งยาก (ทุนทรัพย์ไม่เกิน ๓๐๐,๐๐๐ บาท) — พิมพ์หมายเรียกแบบ (๑๒) ให้ด้วย</span></label></div>
 
     <div class="card">
-      <h3>ยอดหนี้</h3>
-      <div class="grid4">
+      <h3>ทุนทรัพย์</h3>
+      <div class="seg" role="radiogroup"><label><input type="radio" name="amode" value="calc"> คำนวณดอกเบี้ยจากเงินต้น</label><label><input type="radio" name="amode" value="fixed"> ระบุยอดเอง</label></div>
+      <div class="grid4" id="boxCalc">
         <label class="f">เงินต้น (บาท)<input id="lPrin" inputmode="decimal"></label>
         <label class="f">ดอกเบี้ย (% ต่อปี)<input id="lRate" inputmode="decimal"></label>
         <label class="f">วันทำสัญญา<input id="lDate" type="date"></label>
         <label class="f">วันครบกำหนดชำระ<input id="lDue" type="date"></label>
         <label class="f span2">เริ่มคิดดอกเบี้ยตั้งแต่<input id="lFrom" type="date"></label>
         <label class="f span2">สถานที่ทำสัญญา<input id="lPlace"></label>
+      </div>
+      <div class="grid2" id="boxFix" hidden>
+        <label class="f">ทุนทรัพย์ (บาท)<input id="fAmt" inputmode="decimal"></label>
+        <label class="f">ที่มาของยอด (ถ้ามี)<input id="fNote"></label>
       </div>
       <div class="calc" id="calc"></div>
     </div>
@@ -152,7 +187,8 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
         <label class="f">เลขประจำตัวประชาชน<input id="wId" inputmode="numeric"></label>
         <label class="f">ใบอนุญาตเลขที่<input id="wLic" placeholder="เช่น ๑๒๓๔๕/๒๕๕๕"></label>
         <label class="f">ว่าความได้ใน<input id="wArea" value="ทั่วราชอาณาจักร"></label>
-        <label class="f">อายุ (ปี)<input id="wAge" inputmode="numeric"></label>
+        <label class="f">วันเกิด<input id="wBirth" type="date"></label>
+        <label class="f">อายุ (ปี) ถ้าไม่กรอกจะคำนวณจากวันเกิด<input id="wAge" inputmode="numeric"></label>
         <label class="f">บ้านเลขที่ (สำนักงาน)<input id="wHouse"></label>
         <label class="f">หมู่ที่<input id="wMoo"></label>
         <label class="f">ถนน<input id="wRoad"></label>
@@ -168,7 +204,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
     </div>
 
     <div class="card">
-      <h3>ข้อเท็จจริงเพิ่มเติม</h3>
+      <h3>รายละเอียด / ข้อเท็จจริง</h3>
       <label class="f">เล่าสิ่งที่ไม่มีในเอกสาร เช่น การทวงถาม การชำระบางส่วน วันที่จำเลยได้รับหนังสือ
         <textarea id="cFacts" placeholder="เช่น ครบกำหนดแล้วจำเลยไม่ชำระเลย โจทก์ส่งหนังสือบอกกล่าวทวงถามลงวันที่ … จำเลยได้รับเมื่อวันที่ … แต่เพิกเฉย"></textarea></label>
     </div>
@@ -198,8 +234,22 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
     <textarea class="doc" id="dBody" rows="18" aria-label="คำฟ้อง"></textarea>
     <p class="sec">คำขอท้ายคำฟ้อง (๕) — บรรทัดละ ๑ ข้อ ไม่เกิน ๔ ข้อ</p>
     <textarea class="doc" id="dRelief" rows="6" aria-label="คำขอท้ายคำฟ้อง"></textarea>
-    <p class="sec">คำร้องขอให้ส่งหมายเรียกและสำเนาคำฟ้อง (๗)</p>
-    <textarea class="doc" id="dPet" rows="7" aria-label="คำร้อง"></textarea>
+    <p class="sec">คำร้อง (๗) อ้างส่งสำเนาเอกสารท้ายคำฟ้อง</p>
+    <textarea class="doc" id="dPetA" rows="5" aria-label="คำร้องอ้างส่งสำเนาเอกสาร"></textarea>
+    <p class="sec">คำร้อง (๗) ขอส่งหมายและปิดหมาย</p>
+    <textarea class="doc" id="dPetB" rows="6" aria-label="คำร้องขอส่งหมายและปิดหมาย"></textarea>
+    <p class="sec">บัญชีพยาน (๑๕) — บรรทัดละ ๑ อันดับ</p>
+    <textarea class="doc" id="dWit" rows="6" aria-label="บัญชีพยาน"></textarea>
+    <p class="sec">เอกสารที่จะพิมพ์</p>
+    <div class="seg" id="docSel">
+      <label><input type="checkbox" value="comp" checked disabled> คำฟ้อง (๔)(๕)</label>
+      <label><input type="checkbox" value="att" checked> เอกสารท้ายคำฟ้อง</label>
+      <label><input type="checkbox" value="f12" checked> หมายเรียก (๑๒)</label>
+      <label><input type="checkbox" value="petA" checked> คำร้องอ้างส่งเอกสาร</label>
+      <label><input type="checkbox" value="petB" checked> คำร้องขอส่งหมาย/ปิดหมาย</label>
+      <label><input type="checkbox" value="f9" checked> ใบแต่งทนายความ (๙)</label>
+      <label><input type="checkbox" value="f15" checked> บัญชีพยาน (๑๕)</label>
+    </div>
     <ul class="checklist" id="notes" hidden></ul>
     <div class="row">
       <button class="btn primary" id="buildBtn">สร้างไฟล์ PDF</button>
@@ -273,7 +323,7 @@ async function refreshQuota(){
   if(!user)return;
   try{const st=await api('status',{userId:user.userId});
     if(!st.open){$('quota').textContent='ระบบปิดให้บริการชั่วคราว';$('readBtn').disabled=true;return}
-    $('quota').textContent='วันนี้ใช้ได้อีก '+toTh(st.leftToday)+' คดี';
+    $('quota').textContent=$('quota2').textContent='วันนี้ใช้ได้อีก '+toTh(st.leftToday)+' คดี';
     if(!st.registered)show(1);
   }catch(e){$('quota').textContent=''}
 }
@@ -347,7 +397,7 @@ const drop=$('drop');
 drop.addEventListener('drop',async e=>{e.preventDefault();files=files.concat(await readFiles([...e.dataTransfer.files]));saveFiles();drawFiles()});
 
 $('readBtn').onclick=async()=>{
-  $('err2').hidden=true;$('busy2').hidden=false;$('readBtn').disabled=true;
+  $('err2').hidden=true;$('busy2t').textContent='AI กำลังอ่านเอกสาร ใช้เวลาประมาณ 20–60 วินาที';$('busy2').hidden=false;$('readBtn').disabled=true;
   try{
     const r=await api('cExtract',{userId:user.userId,files:files.map(f=>({mime:f.mime,data:f.data}))});
     W={step:3,jobId:r.jobId,x:r.data};initFromExtract(r.data);saveW();show(3);window.scrollTo({top:$('s3').offsetTop-80});
@@ -355,93 +405,141 @@ $('readBtn').onclick=async()=>{
   finally{$('busy2').hidden=true;$('readBtn').disabled=!files.length;refreshQuota()}
 };
 
-/* ---------- step 3 ---------- */
+/* ---------- step 2: manual entry (no files) ---------- */
+function setTab(man){$('tabUp').classList.toggle('on',!man);$('tabMan').classList.toggle('on',man);$('tabUp').setAttribute('aria-selected',!man);$('tabMan').setAttribute('aria-selected',man);$('paneUp').hidden=man;$('paneMan').hidden=!man;LS.set('cTab',man?1:0)}
+$('tabUp').onclick=()=>setTab(false);$('tabMan').onclick=()=>setTab(true);
+function nameRow(box,v){
+  const d=document.createElement('div');d.className='nm';
+  const i=document.createElement('input');i.value=v||'';i.placeholder='ชื่อ-นามสกุล มีคำนำหน้า เช่น นายสมชาย ใจดี';i.setAttribute('aria-label','ชื่อ');
+  const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','ลบชื่อนี้');
+  x.onclick=()=>{if(box.children.length>1)d.remove();else i.value=''};d.append(i,x);box.append(d);return i;
+}
+['mP','mD'].forEach(k=>nameRow($(k)));
+$('addMP').onclick=()=>nameRow($('mP')).focus();$('addMD').onclick=()=>nameRow($('mD')).focus();
+const names=k=>[...$(k).querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
+$('manBtn').onclick=async()=>{
+  $('err2').hidden=true;
+  const P=names('mP'),D=names('mD'),charge=$('mCharge').value.trim(),facts=$('mFacts').value.trim(),amt=num($('mAmt').value);
+  const miss=[];if(!P.length)miss.push('ชื่อโจทก์');if(!D.length)miss.push('ชื่อจำเลย');if(!charge)miss.push('ข้อหา');if(!facts)miss.push('รายละเอียด');
+  if(miss.length){$('err2').textContent='กรุณากรอก: '+miss.join(', ');$('err2').hidden=false;return}
+  $('busy2t').textContent='กำลังเริ่มคดี…';$('busy2').hidden=false;$('manBtn').disabled=true;
+  try{
+    const r=await api('cStart',{userId:user.userId,charge});
+    W={step:3,jobId:r.jobId,x:{persons:[]},manual:true,amode:'fixed',
+       parties:{P:P.map(n=>blankParty(toTh(n))),D:D.map(n=>blankParty(toTh(n)))},
+       form:{cCharge:toTh(charge),fAmt:amt?money(amt):'',fNote:toTh($('mNote').value.trim()),cFacts:toTh(facts),cDate:today()}};
+    saveW();loadForm();show(3);window.scrollTo({top:$('s3').offsetTop-80});
+  }catch(e){$('err2').textContent=e.message;$('err2').hidden=false}
+  finally{$('busy2').hidden=true;$('manBtn').disabled=false;refreshQuota()}
+};
+
+/* ---------- step 3: parties (one card per person) ---------- */
 const PF=[['name','ชื่อ-นามสกุล (มีคำนำหน้า)','span2'],['idCard','เลขประจำตัวประชาชน'],['age','อายุ (ปี)'],['race','เชื้อชาติ'],['nat','สัญชาติ'],['occ','อาชีพ'],
   ['houseNo','บ้านเลขที่'],['moo','หมู่ที่'],['road','ถนน'],['soi','ตรอก/ซอย'],['sub','ตำบล/แขวง'],['dist','อำเภอ/เขต'],['prov','จังหวัด'],['post','รหัสไปรษณีย์'],['tel','โทรศัพท์'],['fax','โทรสาร'],['mail','อีเมล']];
-function partyCard(key,label){
-  const c=$('card'+key);c.innerHTML='';
-  const h=document.createElement('h3');h.textContent=label;
-  const sel=document.createElement('select');sel.id='sel'+key;sel.setAttribute('aria-label','เลือกจากเอกสาร');
-  const ps=(W.x&&W.x.persons)||[];
-  const o0=document.createElement('option');o0.value='';o0.textContent='— เลือกจากเอกสาร —';sel.append(o0);
-  ps.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(p.role?p.role+': ':'')+[p.title+p.name,p.surname].join(' ').trim();sel.append(o)});
-  sel.onchange=()=>{if(sel.value!=='')fillParty(key,ps[+sel.value]);saveForm()};
-  h.append(sel);c.append(h);
-  const g=document.createElement('div');g.className='grid3';
-  PF.forEach(([k,l,cls])=>{const lb=document.createElement('label');lb.className='f'+(cls?' '+cls:'');lb.textContent=l;const i=document.createElement('input');i.id=key+'_'+k;lb.append(i);g.append(lb)});
-  c.append(g);
-}
-function fillParty(key,p){
+const ROLE={P:'โจทก์',D:'จำเลย'};
+const today=()=>iso(new Date(Date.now()-new Date().getTimezoneOffset()*6e4));
+function blankParty(name){const o={};PF.forEach(([k])=>o[k]='');o.name=name||'';return o}
+function fromPerson(p){
   p=p||{};const v={name:[(p.title||'')+(p.name||''),p.surname||''].join(' ').trim(),idCard:p.idCard,age:p.age,race:p.nationality||(p.idCard?'ไทย':''),nat:p.nationality||(p.idCard?'ไทย':''),occ:p.occupation,
     houseNo:p.houseNo,moo:p.moo,road:p.road,soi:p.soi,sub:p.subdistrict,dist:p.district,prov:p.province,post:p.postcode,tel:p.phone,fax:'',mail:''};
-  PF.forEach(([k])=>$(key+'_'+k).value=toTh(v[k]||''));
+  const o={};PF.forEach(([k])=>o[k]=toTh(v[k]||''));return o;
 }
-const WF=['wName','wId','wLic','wArea','wAge','wHouse','wMoo','wRoad','wSoi','wSub','wDist','wProv','wPost','wTel','wFax','wMail'];
+function drawParties(key){
+  W.parties=W.parties||{P:[blankParty()],D:[blankParty()]};
+  const list=W.parties[key],box=$('parties'+key);box.innerHTML='';
+  const ps=(W.x&&W.x.persons)||[];
+  list.forEach((p,i)=>{
+    const c=document.createElement('div');c.className='card';
+    const h=document.createElement('h3');h.textContent=ROLE[key]+(list.length>1?'ที่ '+toTh(i+1):'');
+    if(ps.length){const sel=document.createElement('select');sel.setAttribute('aria-label','เลือกจากเอกสาร');
+      const o0=document.createElement('option');o0.value='';o0.textContent='— เลือกจากเอกสาร —';sel.append(o0);
+      ps.forEach((q,j)=>{const o=document.createElement('option');o.value=j;o.textContent=(q.role?q.role+': ':'')+[(q.title||'')+(q.name||''),q.surname||''].join(' ').trim();sel.append(o)});
+      sel.onchange=()=>{if(sel.value!==''){list[i]=fromPerson(ps[+sel.value]);saveW();drawParties(key)}};h.append(sel)}
+    if(list.length>1){const rm=document.createElement('button');rm.type='button';rm.className='rm';rm.textContent='ลบ';rm.onclick=()=>{list.splice(i,1);saveW();drawParties(key)};h.append(rm)}
+    c.append(h);
+    const g=document.createElement('div');g.className='grid3';
+    PF.forEach(([k,l,cls])=>{const lb=document.createElement('label');lb.className='f'+(cls?' '+cls:'');lb.textContent=l;const inp=document.createElement('input');inp.value=p[k]||'';
+      inp.oninput=()=>{p[k]=inp.value;saveW()};lb.append(inp);g.append(lb)});
+    c.append(g);box.append(c);
+  });
+}
+$('addP').onclick=()=>{W.parties.P.push(blankParty());saveW();drawParties('P')};
+$('addD').onclick=()=>{W.parties.D.push(blankParty());saveW();drawParties('D')};
+const WF=['wName','wId','wLic','wArea','wBirth','wAge','wHouse','wMoo','wRoad','wSoi','wSub','wDist','wProv','wPost','wTel','wFax','wMail'];
 function initFromExtract(x){
-  partyCard('P','โจทก์');partyCard('D','จำเลย');
   const ps=x.persons||[];
-  const ip=ps.findIndex(p=>/ให้กู้/.test(p.role||'')),id=ps.findIndex(p=>/^ผู้กู้|ผู้กู้$/.test(p.role||''));
-  if(ip>=0){$('selP').value=ip;fillParty('P',ps[ip])}
-  if(id>=0){$('selD').value=id;fillParty('D',ps[id])}
-  const l=x.loan||{};
-  $('lPrin').value=l.principal?toTh(Number(l.principal).toLocaleString('en-US')):'';$('lRate').value=l.interestRate?toTh(l.interestRate):'';
-  $('lDate').value=l.contractDate||'';$('lDue').value=l.dueDate||'';$('lFrom').value=l.contractDate||'';$('lPlace').value=toTh(l.place||'');
-  $('cDate').value=iso(new Date(Date.now()-new Date().getTimezoneOffset()*6e4));
-  const dm=x.demand||{},facts=[];
+  const P=ps.filter(p=>/ให้กู้|ผู้ให้|เจ้าหนี้|ผู้ขาย|ผู้ให้เช่า/.test(p.role||'')),D=ps.filter(p=>/^ผู้กู้|ผู้กู้$|ผู้ค้ำ|ลูกหนี้|ผู้ซื้อ|ผู้เช่า/.test(p.role||''));
+  W.parties={P:(P.length?P:[{}]).map(fromPerson),D:(D.length?D:[{}]).map(fromPerson)};
+  const l=x.loan||{},dm=x.demand||{},facts=[];
   if(dm.letterDate||dm.receivedDate)facts.push('โจทก์ส่งหนังสือบอกกล่าวทวงถาม'+(dm.letterDate?' ลงวันที่ '+thDate(dm.letterDate):'')+(dm.receivedDate?' จำเลยได้รับเมื่อวันที่ '+thDate(dm.receivedDate):'')+' แต่จำเลยเพิกเฉย');
   if(x.payments)facts.push(toTh(x.payments));
-  $('cFacts').value=facts.join('\n');
+  W.amode=l.principal?'calc':'fixed';
+  W.form={cCharge:l.principal?'ผิดสัญญากู้ยืมเงิน':'',lPrin:l.principal?toTh(Number(l.principal).toLocaleString('en-US')):'',lRate:l.interestRate?toTh(l.interestRate):'',
+    lDate:l.contractDate||'',lDue:l.dueDate||'',lFrom:l.contractDate||'',lPlace:toTh(l.place||''),cDate:today(),cFacts:facts.join('\n')};
   // attachments: one number per distinct document title, in file order
   W.att={};const nos={};let n=0;
   files.forEach((f,i)=>{const d=(x.documents||[]).find(d=>+d.file===i+1)||{};const t=toTh((d.title||'')+(d.date?' ลงวันที่ '+d.date:''));
     const key=d.title||('#'+i);if(!nos[key])nos[key]=toTh(++n);W.att[f.id]={no:nos[key],title:t?'สำเนา'+t.replace(/^สำเนา/,''):''}});
-  loadLawyer();calc();drawFiles();
+  loadForm();drawFiles();
 }
 function loadLawyer(){const L=LS.get('cLawyer',{});WF.forEach(k=>{if(L[k]!=null)$(k).value=L[k]})}
 function saveLawyer(){const L={};WF.forEach(k=>L[k]=$(k).value);LS.set('cLawyer',L)}
-const FORM=['cCourt','cDate','lPrin','lRate','lDate','lDue','lFrom','lPlace','cFacts'];
-function saveForm(){W.form={};FORM.forEach(k=>W.form[k]=$(k).value);['P','D'].forEach(p=>PF.forEach(([k])=>{const e=$(p+'_'+k);if(e)W.form[p+'_'+k]=e.value}));saveW();saveLawyer()}
-function loadForm(){partyCard('P','โจทก์');partyCard('D','จำเลย');const f=W.form||{};Object.keys(f).forEach(k=>{const e=$(k);if(e)e.value=f[k]});loadLawyer();calc()}
-$('s3').addEventListener('input',e=>{if(e.target.closest('#attList'))return;saveForm();calc()});
+const FORM=['cCourt','cDate','cCharge','cSmall','lPrin','lRate','lDate','lDue','lFrom','lPlace','fAmt','fNote','cFacts'];
+function saveForm(){W.form={};FORM.forEach(k=>W.form[k]=$(k).type==='checkbox'?$(k).checked:$(k).value);const m=document.querySelector('input[name=amode]:checked');W.amode=m?m.value:'fixed';saveW();saveLawyer()}
+function loadForm(){
+  drawParties('P');drawParties('D');const f=W.form||{};FORM.forEach(k=>{if($(k).type==='checkbox')$(k).checked=f[k]!==false;else $(k).value=f[k]!=null?f[k]:''});
+  const m=document.querySelector('input[name=amode][value="'+(W.amode||'calc')+'"]');if(m)m.checked=true;loadLawyer();calc();
+}
+$('s3').addEventListener('input',e=>{if(e.target.closest('#attList')||e.target.closest('#partiesP')||e.target.closest('#partiesD'))return;saveForm();calc()});
 
 function calc(){
+  const mode=(document.querySelector('input[name=amode]:checked')||{}).value||'calc';
+  $('boxCalc').hidden=mode!=='calc';$('boxFix').hidden=mode!=='fixed';
+  const box=$('calc');box.innerHTML='';const s=(l,v)=>{const d=document.createElement('div');d.append(l+' ');const bb=document.createElement('b');bb.textContent=v;d.append(bb);box.append(d)};
+  if(mode==='fixed'){
+    const t=Math.round(num($('fAmt').value)*100)/100;
+    if(!t){box.textContent='ระบุทุนทรัพย์ที่จะฟ้อง';W.calc=null;return}
+    W.calc={fixed:true,t,note:toTh($('fNote').value.trim())};saveW();s('ทุนทรัพย์ =',money(t)+' บาท ('+bahtText(t)+')');return;
+  }
   const P=num($('lPrin').value),r=num($('lRate').value),a=pd($('lFrom').value),b=pd($('cDate').value);
-  const box=$('calc');
   if(!P||!a||!b||b<a){box.textContent='กรอกเงินต้น วันเริ่มคิดดอกเบี้ย และวันที่ยื่นฟ้อง เพื่อคำนวณยอดหนี้';W.calc=null;return}
   const days=Math.round((b-a)/864e5),i=Math.round(P*r/100*days/365*100)/100,t=Math.round((P+i)*100)/100;
   W.calc={P,r,days,i,t,from:$('lFrom').value,to:$('cDate').value};saveW();
-  box.innerHTML='';const s=(l,v)=>{const d=document.createElement('div');d.append(l+' ');const bb=document.createElement('b');bb.textContent=v;d.append(bb);box.append(d)};
   s('ดอกเบี้ยตั้งแต่ '+thDate(W.calc.from)+' ถึง '+thDate(W.calc.to)+' =',toTh(days)+' วัน');
   s('ดอกเบี้ย '+money(P)+' × '+toTh(r)+'% × '+toTh(days)+' ÷ ๓๖๕ =',money(i)+' บาท');
   s('ทุนทรัพย์ (เงินต้น + ดอกเบี้ยถึงวันฟ้อง) =',money(t)+' บาท ('+bahtText(t)+')');
   if(r>15)s('⚠','อัตราดอกเบี้ยเกินร้อยละ ๑๕ ต่อปี (ป.พ.พ. มาตรา ๖๕๔) ควรตรวจก่อนฟ้อง');
 }
-const party=key=>{const o={};PF.forEach(([k])=>o[k]=toTh(($(key+'_'+k)||{}).value||'').trim());return o};
+const plist=key=>((W.parties||{})[key]||[]).map(p=>{const o={};PF.forEach(([k])=>o[k]=toTh(p[k]||'').trim());return o}).filter(o=>o.name);
 const lawyer=()=>{const o={};WF.forEach(k=>o[k]=toTh($(k).value.trim()));return o};
 function attachments(){
   const m={};files.forEach(f=>{const a=(W.att||{})[f.id];if(!a||!a.no)return;(m[a.no]=m[a.no]||{no:a.no,title:a.title,files:[]}).files.push(f);if(!m[a.no].title&&a.title)m[a.no].title=a.title});
   return Object.values(m).sort((a,b)=>+toAr(a.no)-+toAr(b.no));
 }
+const label=(list,role,i)=>list.length>1?role+'ที่ '+toTh(i+1):role;
 
 async function doDraft(){
   saveForm();$('err3').hidden=true;
-  const P=party('P'),D=party('D'),L=lawyer(),c=W.calc;
-  const miss=[];if(!$('cCourt').value.trim())miss.push('ศาล');if(!P.name)miss.push('ชื่อโจทก์');if(!D.name)miss.push('ชื่อจำเลย');if(!c)miss.push('ยอดหนี้');
+  const P=plist('P'),D=plist('D'),L=lawyer(),c=W.calc;
+  const miss=[];if(!$('cCourt').value.trim())miss.push('ศาล');if(!P.length)miss.push('ชื่อโจทก์');if(!D.length)miss.push('ชื่อจำเลย');if(!c)miss.push('ทุนทรัพย์');
   if(miss.length){$('err3').textContent='กรุณากรอก: '+miss.join(', ');$('err3').hidden=false;return}
   $('busy3').hidden=false;$('draftBtn').disabled=true;
-  const x=W.x||{};
-  const caseData={ศาล:toTh($('cCourt').value.trim()),วันยื่นฟ้อง:thDate($('cDate').value),โจทก์:P,จำเลย:D,
-    สัญญากู้ยืมเงิน:{เงินต้น:money(c.P)+' บาท',อัตราดอกเบี้ย:'ร้อยละ '+toTh(c.r)+' ต่อปี',วันทำสัญญา:thDate($('lDate').value),วันครบกำหนดชำระ:thDate($('lDue').value),สถานที่ทำสัญญา:toTh($('lPlace').value)},
+  const x=W.x||{},tag=(list,role)=>list.map((p,i)=>Object.assign({ฐานะ:label(list,role,i)},p));
+  const caseData={ศาล:toTh($('cCourt').value.trim()),วันยื่นฟ้อง:thDate($('cDate').value),ข้อหา:toTh($('cCharge').value.trim()),โจทก์:tag(P,'โจทก์'),จำเลย:tag(D,'จำเลย'),
     ข้อสัญญา:(x.clauses||[]).map(toTh),การชำระหนี้ตามเอกสาร:toTh(x.payments||''),
-    ยอดหนี้ที่คำนวณแล้ว:{เงินต้น:money(c.P)+' บาท',คิดดอกเบี้ยตั้งแต่:thDate(c.from),ถึงวันฟ้อง:thDate(c.to),จำนวนวัน:toTh(c.days)+' วัน',
-      วิธีคิด:money(c.P)+' × '+toTh(c.r)+' ÷ ๑๐๐ × '+toTh(c.days)+' ÷ ๓๖๕',ดอกเบี้ยถึงวันฟ้อง:money(c.i)+' บาท',รวมทุนทรัพย์:money(c.t)+' บาท ('+bahtText(c.t)+')',
-      ดอกเบี้ยต่อวันหลังวันฟ้อง:money(Math.round(c.P*c.r/100/365*100)/100)+' บาท'},
     เอกสารท้ายคำฟ้อง:attachments().map(a=>({หมายเลข:a.no,ชื่อ:a.title})),
-    ข้อเท็จจริงเพิ่มเติม:toTh($('cFacts').value),ทนายความโจทก์:L.wName||'(โจทก์ดำเนินคดีเอง)'};
+    รายละเอียดและข้อเท็จจริงจากผู้ใช้:toTh($('cFacts').value),ทนายความโจทก์:L.wName||'(โจทก์ดำเนินคดีเอง)'};
+  if(c.fixed)caseData.ทุนทรัพย์ที่ผู้ใช้ระบุ={ยอด:money(c.t)+' บาท ('+bahtText(c.t)+')',ที่มาของยอด:c.note||'(ไม่ได้ระบุ)'};
+  else{
+    caseData.สัญญากู้ยืมเงิน={เงินต้น:money(c.P)+' บาท',อัตราดอกเบี้ย:'ร้อยละ '+toTh(c.r)+' ต่อปี',วันทำสัญญา:thDate($('lDate').value),วันครบกำหนดชำระ:thDate($('lDue').value),สถานที่ทำสัญญา:toTh($('lPlace').value)};
+    caseData.ยอดหนี้ที่คำนวณแล้ว={เงินต้น:money(c.P)+' บาท',คิดดอกเบี้ยตั้งแต่:thDate(c.from),ถึงวันฟ้อง:thDate(c.to),จำนวนวัน:toTh(c.days)+' วัน',
+      วิธีคิด:money(c.P)+' × '+toTh(c.r)+' ÷ ๑๐๐ × '+toTh(c.days)+' ÷ ๓๖๕',ดอกเบี้ยถึงวันฟ้อง:money(c.i)+' บาท',รวมทุนทรัพย์:money(c.t)+' บาท ('+bahtText(c.t)+')',
+      ดอกเบี้ยต่อวันหลังวันฟ้อง:money(Math.round(c.P*c.r/100/365*100)/100)+' บาท'};
+  }
   try{
     const r=await api('cDraft',{userId:user.userId,jobId:W.jobId,caseData});
     const bt=c.t.toFixed(2).split('.');
-    W.d={charge:toTh(r.charge),baht:toTh(Number(bt[0]).toLocaleString('en-US')),sat:toTh(bt[1]),body:r.body.map(toTh).join('\n'),relief:(r.relief||[]).map(toTh).join('\n'),petition:(r.petition||[]).map(toTh).join('\n'),notes:(r.notes||[]).map(toTh)};
+    W.d={charge:toTh($('cCharge').value.trim()||r.charge),baht:toTh(Number(bt[0]).toLocaleString('en-US')),sat:toTh(bt[1]),body:r.body.map(toTh).join('\n'),relief:(r.relief||[]).map(toTh).join('\n'),notes:(r.notes||[]).map(toTh)};Object.assign(W.d,templates());
     saveW();drawDraft();show(4);window.scrollTo({top:$('s4').offsetTop-80});
   }catch(e){$('err3').textContent=e.message;$('err3').hidden=false}
   finally{$('busy3').hidden=true;$('draftBtn').disabled=false}
@@ -449,17 +547,18 @@ async function doDraft(){
 $('draftBtn').onclick=doDraft;
 
 /* ---------- step 4 ---------- */
-const DF={dCharge:'charge',dBaht:'baht',dSat:'sat',dBody:'body',dRelief:'relief',dPet:'petition'};
+const DF={dCharge:'charge',dBaht:'baht',dSat:'sat',dBody:'body',dRelief:'relief',dPetA:'petA',dPetB:'petB',dWit:'wit'};
 function drawDraft(){
-  const d=W.d||{};Object.keys(DF).forEach(k=>$(k).value=d[DF[k]]||'');
+  const d=W.d||{};if(d.petA==null)Object.assign(d,templates());if(W.docs)document.querySelectorAll('#docSel input').forEach(c=>{if(!c.disabled)c.checked=W.docs.includes(c.value)});Object.keys(DF).forEach(k=>$(k).value=d[DF[k]]||'');
   const ul=$('notes');ul.innerHTML='';(d.notes||[]).forEach(n=>{const li=document.createElement('li');li.textContent=n;ul.append(li)});
   if(d.notes&&d.notes.length){const b=document.createElement('b');b.textContent='สิ่งที่ต้องตรวจหรือเติมก่อนยื่น';ul.prepend(b)}
   ul.hidden=!(d.notes&&d.notes.length);$('out').hidden=true;
 }
 $('s4').addEventListener('input',()=>{W.d=W.d||{};Object.keys(DF).forEach(k=>W.d[DF[k]]=$(k).value);saveW();$('out').hidden=true});
+document.querySelectorAll('#docSel input').forEach(c=>c.addEventListener('change',()=>{W.docs=[...document.querySelectorAll('#docSel input:checked')].map(i=>i.value);saveW();$('out').hidden=true}));
 $('redraft').onclick=()=>{show(3);doDraft()};
 $('back3').onclick=()=>{show(3);window.scrollTo({top:$('s3').offsetTop-80})};
-function restart(){W={};saveW();files=[];saveFiles();drawFiles();show(2);refreshQuota();window.scrollTo(0,0)}
+function restart(){W={};saveW();files=[];saveFiles();drawFiles();['mP','mD'].forEach(k=>{$(k).innerHTML='';nameRow($(k))});['mCharge','mAmt','mNote','mFacts'].forEach(k=>$(k).value='');show(2);refreshQuota();window.scrollTo(0,0)}
 $('restart3').onclick=restart;$('restart4').onclick=restart;
 
 /* ======================================================================
@@ -498,113 +597,207 @@ const wrap=(text,widthOf,sz)=>wrapT(text,widthOf,sz).map(l=>l.map(t=>t[0]).join(
 class Pg{constructor(form,idx,label){this.form=form;this.idx=idx;this.label=label;this.items=[];this.w=PW;this.h=PH}
   t(x,b,s,maxw,sz,anchor){if(s!=null&&String(s).trim()!=='')this.items.push({k:'t',x,b,s:String(s),maxw,sz:sz||SIZE,anchor:anchor||'start'});return this}
   j(x,b,toks,w){this.items.push({k:'j',x,b,toks,w});return this}
-  line(x1,y1,x2,y2){this.items.push({k:'l',x1,y1,x2,y2});return this}}
-function flow(paras,slots,indentX,more){
+  line(x1,y1,x2,y2){this.items.push({k:'l',x1,y1,x2,y2});return this}
+  white(x,y,w,h){this.items.push({k:'w',x,y,w,h});return this}
+  rect(x,y,w,h){this.items.push({k:'r',x,y,w,h});return this}
+  ns(){const it=this.items[this.items.length-1];if(it)it.ns=1;return this}}
+function flow(paras,slots,indentX,more,clearCentred){
   let k=0;
   paras.forEach((para,pi)=>{
     const slot=i=>{while(k+i>=slots.length){if(!more)throw new Error('ข้อความยาวเกินช่องในแบบพิมพ์');slots.push(...more())}return slots[k+i]};
     const width=i=>{const s=slot(i);return i===0&&pi>0&&indentX>s.x?s.w-(indentX-s.x):s.w};
+    const al=/^=([cr])=/.exec(para);
+    if(al){const t=para.slice(3),s=slot(0);if(clearCentred)s.p.white(s.x-3,s.b-17,s.w+8,25);s.p.t(al[1]==='c'?PW/2:s.x+s.w,s.b,t,s.w,SIZE,al[1]==='c'?'middle':'end');k++;return}
     const ls=wrapT(para,width,SIZE);
     ls.forEach((ln,i)=>{const s=slot(i);s.p.j(i===0&&pi>0&&indentX>s.x?indentX:s.x,s.b,ln,i<ls.length-1?width(i):0)});
     k+=ls.length;
   });
 }
 const dash=v=>v||'-';
-const ID4=[177.0,198.5,213.0,227.0,241.5,263.0,277.2,291.5,305.5,320.0,341.5,355.8,377.5];
+const ID4=[177.0,194.5,209.0,223.2,237.5,255.2,269.5,284.0,298.0,312.2,330.0,344.5,362.0];
 const ID5=[313.2,343.5,359.5,375.5,391.5,416.0,432.0,448.0,464.0,480.0,504.2,520.2,544.8];
-const ID7=[198.8,217.5,232.8,247.8,263.0,281.8,296.8,312.0,327.0,342.2,361.0,376.2,395.0];
-const ID9=[211.5,230.2,246.2,262.2,278.2,298.2,314.2,330.2,346.2,362.2,382.2,398.2,418.2];
-function idBoxes(p,xs,id,b){const d=[...toTh(id)].filter(c=>TH.includes(c));if(d.length===13)d.forEach((c,i)=>p.t(xs[i],b,c,null,14,'middle'))}
-const F40=[Array.from({length:20},(_,k)=>103+(785-103)/19*k-3),Array.from({length:20},(_,k)=>73+(755.5-73)/19*k-3)];
+const ID7=[198.8,217.8,232.8,247.8,263.2,281.8,297.0,312.2,327.2,342.2,361.2,376.5,395.2];
+const ID9=[210.5,230.5,246.5,262.5,278.5,298.5,314.5,330.5,346.5,362.5,382.5,398.5,418.5];
+function idBoxes(p,xs,id,b){const d=[...toTh(id)].filter(c=>TH.includes(c));if(d.length===13)d.forEach((c,i)=>p.t(xs[i],b,c,null,14,'middle').ns())}
+function idRow(p,x,top){
+  const xs=[],W=10.5,G=2.5,D=9;let cx=x;
+  [1,4,5,2,1].forEach((n,gi)=>{if(gi){p.line(cx+1.5,top+5.5,cx+D-1.5,top+5.5);cx+=D}
+    for(let i=0;i<n;i++){p.rect(cx,top,W,W);xs.push(cx+W/2);cx+=W+(i<n-1?G:0)}});
+  return xs;
+}
+const F40=[Array.from({length:20},(_,k)=>100.5+(772.5-100.5)/19*k-2),Array.from({length:20},(_,k)=>95.5+(767.5-95.5)/19*k-2)];
+
+/* standard wording for the two (๗) petitions and the witness list; the user can edit them in step 4 */
+function templates(){
+  const atts=attachments(),nD=plist('D').length,L=lawyer();
+  const nos=atts.map(a=>a.no),range=!nos.length?'[ระบุ]':nos.length===1?nos[0]:nos[0]+'-'+nos[nos.length-1];
+  const all=nD>1?(nD===2?'จำเลยทั้งสอง':'จำเลยทุกคน'):'จำเลย';
+  return {
+    petA:['คดีนี้ โจทก์ได้ยื่นฟ้องจำเลยต่อศาลในวันนี้',
+      'ข้อ ๒. ด้วยตามคำฟ้องของโจทก์ มีเอกสารท้ายคำฟ้องหมายเลข '+range+' ซึ่งโจทก์อ้างเป็นพยานหลักฐานในคดีนี้ โจทก์ขอกราบเรียนต่อศาลว่า โจทก์ขอถือเอาเอกสารท้ายคำฟ้องทั้งหมดเป็นการส่งสำเนาเอกสารให้แก่ศาลและจำเลยตามที่กฎหมายกำหนด เพื่อประโยชน์แห่งความยุติธรรม ขอศาลได้โปรดอนุญาต'].join('\n'),
+    petB:['คดีนี้ โจทก์ได้ยื่นฟ้องจำเลยต่อศาลในวันนี้',
+      'ข้อ ๒. เนื่องจาก'+all+'มีภูมิลำเนาเป็นที่แน่นอนตามคำฟ้องของโจทก์จริง ดังนั้น ในการส่งหมายเรียกและสำเนาคำฟ้องให้แก่'+all+' หากไม่พบตัวจำเลย หรือไม่มีผู้ใดยอมรับหมายไว้โดยชอบแล้ว ขอศาลได้โปรดมีคำสั่งให้เจ้าพนักงานเดินหมายทำการปิดหมายเรียกและสำเนาคำฟ้องของโจทก์ไว้ ณ ภูมิลำเนาของจำเลย แทนการส่งหมายด้วยวิธีธรรมดา เพื่อประโยชน์แห่งความรวดเร็วในการพิจารณาคดี โดยโจทก์เป็นผู้เสียค่าธรรมเนียมตามระเบียบ ขอศาลได้โปรดอนุญาต'].join('\n'),
+    wit:['โจทก์อ้างตนเองเป็นพยาน',...atts.map(a=>a.title||('เอกสารท้ายคำฟ้องหมายเลข '+a.no))].join('\n')
+  };
+}
 
 function layout(){
-  const P=party('P'),D=party('D'),L=lawyer(),d=W.d||{},hasL=!!L.wName;
+  const PL=plist('P'),DL=plist('D'),L=lawyer(),d=W.d||{},hasL=!!L.wName;
+  if(!PL.length||!DL.length)throw new Error('กรุณากรอกชื่อโจทก์และจำเลย');
+  const P=PL[0],D=DL[0],docs=W.docs||['att','f12','petA','petB','f9','f15'],want=k=>docs.includes(k);
+  const nm=(list,role)=>list.length===1?list[0].name:list.length<=3?list.map((p,i)=>p.name+' '+role+'ที่ '+toTh(i+1)).join(' '):list[0].name+' '+role+'ที่ ๑ กับพวกรวม '+toTh(list.length)+' คน';
+  const pAll=nm(PL,''),dAll=nm(DL,''),pWho=PL.length===1?P.name+' โจทก์':nm(PL,'โจทก์');
+  const desc=(o,lab)=>[lab,o.name,o.idCard&&'เลขประจำตัวประชาชน '+o.idCard,o.race&&'เชื้อชาติ'+o.race,o.nat&&'สัญชาติ'+o.nat,o.occ&&'อาชีพ'+o.occ,o.age&&'อายุ '+o.age+' ปี',
+    o.houseNo&&'อยู่บ้านเลขที่ '+o.houseNo,o.moo&&'หมู่ที่ '+o.moo,o.road&&'ถนน'+o.road,o.soi&&'ตรอก/ซอย'+o.soi,o.sub&&'ตำบล/แขวง'+o.sub,o.dist&&'อำเภอ/เขต'+o.dist,o.prov&&'จังหวัด'+o.prov,o.post&&'รหัสไปรษณีย์ '+o.post,o.tel&&'โทรศัพท์ '+o.tel].filter(Boolean).join(' ');
   const court=toTh($('cCourt').value.trim()),dt=pd($('cDate').value);
   const day=toTh(dt.getUTCDate()),month=MONTHS[dt.getUTCMonth()],yy=toTh(String(dt.getUTCFullYear()+543).slice(2));
   const paras=s=>toTh(s||'').split(/\n+/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
-  const body=paras(d.body),relief=paras(d.relief).map(r=>r.replace(/^\(?[๐-๙0-9]+[.)]\s*/,'')),pet=paras(d.petition);
-  if(body.length)body[0]=body[0].replace(/^ข้อ\s*[๑1]\s*\.?\s*/,'');
-  if(pet.length)pet[0]=pet[0].replace(/^ข้อ\s*[๑1]\s*\.?\s*/,'');
+  const noKor=a=>{if(a.length)a[0]=a[0].replace(/^ข้อ\s*[๑1]\s*\.?\s*/,'');return a};
+  const body=noKor(paras(d.body)),FEE='ให้จำเลยชำระค่าฤชาธรรมเนียมและค่าทนายความแทนโจทก์';
+  const relief=paras(d.relief).map(r=>r.replace(/^\(?[๐-๙0-9]+[.)]\s*/,'')).filter(r=>!/ค่าฤชาธรรมเนียม|ตามที่ศาลเห็นสมควร|คำขออื่น|ความช่วยเหลืออื่น/.test(r));
+  relief.push(DL.length>1?FEE.replace('ให้จำเลย','ให้จำเลยทั้ง'+(DL.length===2?'สอง':'หมด')):FEE);
   if(relief.length>4)throw new Error('คำขอท้ายคำฟ้องมีได้ไม่เกิน ๔ ข้อ (บรรทัดละ ๑ ข้อ)');
-  const comp=[],pet7=[];
+  const role=hasL?'ทนายโจทก์':'โจทก์',signer=hasL?L.wName:P.name;
+  const B=(y)=>y-5.3;                       /* Word-exported forms: baseline = bottom of the row's text box − 4.3 pt */
   const newPg=(arr,form,idx,label)=>{const p=new Pg(form,idx,label);arr.push(p);return p};
-  let n40=0;const more40=arr=>()=>{const side=n40%2;n40++;const p=newPg(arr,'f40',side,'แผ่นต่อ (๔๐ ก.)');return F40[side].map(b=>({p,x:88,b,w:446}))};
+  let n40=0;const more40=(arr,label)=>()=>{const side=n40%2;n40++;const p=newPg(arr,'f40',side,label||'แผ่นต่อ (๔๐ ก.)');return F40[side].map(b=>({p,x:88,b,w:456}))};
+  const closing=['=c=ควรมิควรแล้วแต่จะโปรด'];
+  const docSets=[];
 
-  /* (๔) คำฟ้อง */
+  /* ---------- (๔) คำฟ้อง ---------- */
+  const comp=[];
   const a=newPg(comp,'f4',0,'คำฟ้อง (๔)');
-  a.t(338,177.7,court,155).t(309,202.7,day,30).t(371,202.7,month,95).t(544,202.7,yy,30).t(312,227.7,'แพ่ง',84)
-   .t(140,324.4,P.name,395).t(140,370.6,D.name,395).t(172,400.3,toTh(d.charge),384).t(145,425.5,toTh(d.baht),270).t(446,425.5,toTh(d.sat),80)
-   .t(174,450.8,P.name,384);
-  const row=(p,o,rows)=>{p.t(rows[0][1],rows[0][0],o.race,90);
-    [[o.nat],[o.occ],[o.age],[o.houseNo],[dash(o.moo)]].forEach((v,i)=>p.t(rows[1][1][i][0],rows[1][0],v[0],rows[1][1][i][1]));
-    [dash(o.road),dash(o.soi),o.sub,o.dist].forEach((v,i)=>p.t(rows[2][1][i][0],rows[2][0],v,rows[2][1][i][1]));
-    [o.prov,o.post,dash(o.tel)].forEach((v,i)=>p.t(rows[3][1][i][0],rows[3][0],v,rows[3][1][i][1]));
-    [dash(o.fax),dash(o.mail)].forEach((v,i)=>p.t(rows[4][1][i][0],rows[4][0],v,rows[4][1][i][1]))};
-  idBoxes(a,ID4,P.idCard,473);
-  row(a,P,[[474.2,456],[496,[[104,65],[203,108],[337,24],[436,70],[531,28]]],[522,[[91,86],[236,68],[365,74],[492,66]]],[547.3,[[101,156],[320,66],[431,126]]],[572.5,[[104,127],[344,212]]]]);
-  a.t(116,597.8,D.name,443);idBoxes(a,ID4,D.idCard,622);
-  row(a,D,[[623,464],[650.9,[[104,65],[206,108],[332,32],[439,62],[530,27]]],[670.4,[[91,86],[232,68],[361,71],[486,72]]],[695.7,[[101,145],[309,66],[420,137]]],[720.9,[[104,135],[352,205]]]]);
+  a.t(336,B(170.6),court,157).t(308,B(195.6),day,31).t(370,B(195.6),month,96).t(544,B(195.6),yy,30).t(312,B(220.6),'แพ่ง',100)
+   .t(133,B(272.5),pAll,405).t(133,B(346.4),dAll,405).t(168,B(375.8),toTh(d.charge),389).t(140,B(401.1),toTh(d.baht),279).t(442,B(401.1),toTh(d.sat),86)
+   .t(171,B(426.4),PL.length>1?P.name+' โจทก์ที่ ๑':P.name,388);
+  const row=(p,o,R)=>{p.t(R.race[0],R.race[1],o.race,R.race[2]);
+    [o.nat,o.occ,o.age,o.houseNo,dash(o.moo)].forEach((v,i)=>p.t(R.a[1][i][0],R.a[0],v,R.a[1][i][1]));
+    [dash(o.road),dash(o.soi),o.sub,o.dist].forEach((v,i)=>p.t(R.b[1][i][0],R.b[0],v,R.b[1][i][1]));
+    [o.prov,o.post,dash(o.tel)].forEach((v,i)=>p.t(R.c[1][i][0],R.c[0],v,R.c[1][i][1]));
+    [dash(o.fax),dash(o.mail)].forEach((v,i)=>p.t(R.d[1][i][0],R.d[0],v,R.d[1][i][1]))};
+  idBoxes(a,ID4,P.idCard,443.5);
+  row(a,P,{race:[440,B(450.5),118],a:[B(471.6),[[103,67],[202,111],[336,26],[435,73],[532,27]]],b:[B(497.6),[[90,86],[235,70],[364,76],[492,66]]],c:[B(522.9),[[100,158],[319,67],[430,128]]],d:[B(548.2),[[104,127],[343,216]]]});
+  a.t(115,B(573.4),DL.length>1?D.name+' จำเลยที่ ๑':D.name,445);idBoxes(a,ID4,D.idCard,592.5);
+  row(a,D,{race:[448,B(599.3),111],a:[B(626.6),[[103,70],[205,102],[331,34],[438,64],[528,30]]],b:[B(646.1),[[90,86],[231,70],[361,72],[485,75]]],c:[B(671.3),[[100,147],[308,67],[419,139]]],d:[B(696.5),[[104,136],[351,208]]]});
   const b=newPg(comp,'f4',1,'คำฟ้อง (๔)');
-  const slots=[{p:a,x:170,b:779.8,w:385},{p:b,x:66,b:68.4,w:490},{p:b,x:66,b:102.3,w:490}];
-  for(let k=0;k<20;k++)slots.push({p:b,x:66,b:145+33.9*k-8.8,w:490});
+  const slots=[{p:a,x:167,b:B(755.1),w:389},{p:a,x:64,b:B(788.5),w:493}];
+  for(let k=0;k<21;k++)slots.push({p:b,x:64,b:B(98.6+33.405*k),w:493});
+  const extra=[...PL.slice(1).map((o,i)=>desc(o,'โจทก์ที่ '+toTh(i+2))),...DL.slice(1).map((o,i)=>desc(o,'จำเลยที่ '+toTh(i+2)))];
+  if(extra.length)body.push('รายละเอียดคู่ความเพิ่มเติม',...extra);
+  if(!/ควรมิควร/.test(body[body.length-1]||''))body.push(...closing);
   flow(body,slots,134,more40(comp));
+  /* the complaint is printed on both sides: always end on an even page (blank ruled back page if needed) */
+  if(comp.length%2)more40(comp)();
 
-  /* (๕) คำขอท้ายคำฟ้อง */
-  const c=newPg(comp,'f5',0,'คำขอท้ายคำฟ้อง (๕)');
-  const RL=[[[166,198],[87,223.5],[87,250.5]],[[163,277],[87,303.5],[87,330.5]],[[167.5,357],[87,383.5],[87,410]],[[167.5,437],[87,463.5],[87,490]]];
+  docSets.push({key:'comp',pages:comp});
+  /* ---------- (๕) คำขอท้ายคำฟ้อง: its own sheet, not numbered ---------- */
+  const s5=[],c=newPg(s5,'f5',0,'คำขอท้ายคำฟ้อง (๕)');
+  const RL=[[[166,196],[87,221],[87,247.5]],[[163,273.5],[87,300],[87,326]],[[167,352.5],[87,378.5],[87,405]],[[167,431],[87,457],[87,483.5]]];
   relief.forEach((it,i)=>{const rows=RL[i];let ls,sz;
     for(sz of [16,15,14,13]){ls=wrap(it,j=>537-rows[Math.min(j,2)][0],sz);if(ls.length<=3)break}
     if(ls.length>3)throw new Error('คำขอท้ายคำฟ้องข้อ '+toTh(i+1)+' ยาวเกิน ๓ บรรทัด กรุณาย่อ');
     ls.forEach((ln,j)=>c.t(rows[j][0],rows[j][1],ln,null,sz))});
-  c.t(95,558,'๑');
-  const e=newPg(comp,'f5',1,'คำขอท้ายคำฟ้อง (๕)');
-  if(hasL){e.t(255,98.5,L.wName,280);idBoxes(e,ID5,L.wId,122);e.t(205,147.5,L.wLic,105).t(382,147.5,L.wHouse,78).t(491,147.5,dash(L.wMoo),45)
-    .t(114,171.5,dash(L.wRoad),195).t(366,171.5,dash(L.wSoi),170).t(149,195.5,L.wSub,200).t(367,195.5,L.wDist,170)
-    .t(120,219.5,L.wProv,200).t(377,219.5,L.wPost,150).t(128,243,dash(L.wTel),180).t(352,243,dash(L.wFax),150).t(196,267,dash(L.wMail),300)}
+  c.t(100,557,'๑').t(417,648,'( '+(PL.length===1?P.name:PL.map(p=>p.name).join(', '))+' )',220,SIZE,'middle').ns();
+  const e=newPg(s5,'f5',1,'คำขอท้ายคำฟ้อง (๕)');
+  const id5=[205.5,225.5,241.8,257.8,273.8,294.0,310.0,326.0,342.2,358.2,378.2,394.2,414.5];
+  if(hasL)e.t(353,386,'( '+L.wName+' )',220,SIZE,'middle').ns();
+  if(hasL){e.t(256,102,L.wName,280);idBoxes(e,id5,L.wId,126);e.t(204,151,L.wLic,104).t(381,151,L.wHouse,78).t(491,151,dash(L.wMoo),44)
+    .t(113,174.5,dash(L.wRoad),196).t(366,174.5,dash(L.wSoi),170).t(148,198,L.wSub,162).t(367,198,L.wDist,170)
+    .t(120,221.5,L.wProv,190).t(376,221.5,L.wPost,160).t(128,245,dash(L.wTel),182).t(350,245,dash(L.wFax),185).t(196,269,dash(L.wMail),250)}
+  docSets.push({key:'f5',pages:s5,noNum:true});
+  docSets.push({key:'att'});
 
-  /* (๙) ใบแต่งทนายความ */
-  const f9=[];
-  if(hasL){
-    const g=newPg(f9,'f9',0,'ใบแต่งทนายความ (๙)');
-    g.t(312,173,court,205).t(256,199,day,28).t(320,199,month,105).t(503,199,yy,40).t(286,224.5,'แพ่ง',120)
-     .t(160,250,P.name,340).t(160,323,D.name,330).t(162,375,P.name+' โจทก์',388).t(174,427,L.wName,376);
+  /* ---------- (๑๒) หมายเรียกคดีมโนสาเร่ (one per defendant) ---------- */
+  if($('cSmall').checked&&want('f12'))DL.forEach((o,i)=>{
+    const s12=[],g=newPg(s12,'f12',0,'หมายเรียก (๑๒)'+(DL.length>1?' จำเลยที่ '+toTh(i+1):''));
+    g.t(318,B(211),court,195).t(272,B(234.6),day,27).t(326,B(234.6),month,94).t(496,B(234.6),yy,30)
+     .t(157,B(286.8),pAll,359).t(157,B(330.5),dAll,359).t(132,B(360.7),o.name+(DL.length>1?' จำเลยที่ '+toTh(i+1):''),438)
+     .t(327,B(434.3),'(รายละเอียดปรากฏตามคำฟ้อง)',null,SIZE,'middle').t(258,B(517.1),toTh(d.baht),185).t(468,B(517.1),toTh(d.sat),66).t(346,B(564.2),yy,44);
+    const h=newPg(s12,'f12',1,'หมายเรียก (๑๒)');
+    h.t(176,B(125.7),o.houseNo,106).t(307,B(125.7),dash(o.moo),47).t(378,B(125.7),dash(o.road),182)
+     .t(139,B(149.4),dash(o.soi),97).t(295,B(149.4),o.sub,106).t(456,B(149.4),o.dist,106)
+     .t(120,B(172.9),o.prov,135).t(319,B(172.9),o.post,77).t(438,B(172.9),dash(o.tel),121);
+    docSets.push({key:'f12',pages:s12,noNum:true});
+  });
+
+  /* ---------- (๗) คำร้อง ---------- */
+  const lb=pd(toAr(L.wBirth)),age=L.wAge||(lb?toTh(Math.floor((dt-lb)/(365.2425*864e5))):'');
+  const who=hasL?{nm:L.wName,st:'ทนายโจทก์',id:L.wId,race:'ไทย',nat:'ไทย',occ:'ทนายความ',age,bd:lb?toTh(lb.getUTCDate()):'',bm:lb?MONTHS[lb.getUTCMonth()]:'',by:lb?toTh(lb.getUTCFullYear()+543):'',
+      houseNo:L.wHouse,moo:L.wMoo,road:L.wRoad,soi:L.wSoi,sub:L.wSub,dist:L.wDist,prov:L.wProv,post:L.wPost,tel:L.wTel,fax:L.wFax,mail:L.wMail}
+    :Object.assign({},P,{nm:pAll,st:'โจทก์',id:P.idCard});
+  const pet7=(key,subtitle,text)=>{
+    const arr=[],q=newPg(arr,'f7',0,'คำร้อง (๗) '+subtitle);
+    q.t(117,110,subtitle,null,15).ns();
+    [[158,194,81.2],[206,231,81.2],[153,189,536.3],[201,226,536.3],[486,516,783],[528,548,783]].forEach(([x0,x1,y])=>q.line(x0-1,y,x1+1,y));
+    q.t(339,B(160.5),court,200).t(289,B(185.5),day,33).t(346,B(185.5),month,93).t(513,B(185.5),yy,30).t(315,B(210.6),'แพ่ง',220)
+     .t(149,B(297.8),pAll,340).t(149,B(344),dAll,340).t(208,B(373.3),who.nm,280).t(544,B(373.3),who.st,60,SIZE,'end');
+    idBoxes(q,ID7,who.id,391.5);
+    q.t(124,B(422.1),who.race,48).t(210,B(422.1),who.nat,40).t(280,B(422.1),who.occ,79).t(400,B(422.1),who.bd,20).t(448,B(422.1),who.bm,48).t(517,B(422.1),who.by,30);
+    [[B(449.4),[[108,29,who.age],[214,62,who.houseNo],[305,34,dash(who.moo)],[364,183,dash(who.road)]]],[B(470.9),[[138,104,dash(who.soi)],[300,90,who.sub],[444,103,who.dist]]],
+     [B(495.9),[[120,134,who.prov],[320,64,who.post],[427,120,dash(who.tel)]]],[B(520.9),[[123,144,dash(who.fax)],[381,166,dash(who.mail)]]]]
+     .forEach(([y,xs])=>xs.forEach(([x,m,v])=>q.t(x,y,v,m)));
+    q.t(374,805,'( '+signer+' )',220,SIZE,'middle').ns();
+    const r=newPg(arr,'f7',1,'คำร้อง (๗) '+subtitle);
+    const ps=[{p:q,x:183,b:B(579.3),w:363},...[612.6,646.1,679.5].map(y=>({p:q,x:85,b:B(y),w:460}))];
+    for(let k=0;k<22;k++)ps.push({p:r,x:85,b:B(98.6+33.405*k),w:474});
+    const tx=noKor(paras(text));
+    if(!/ควรมิควร/.test(tx[tx.length-1]||''))tx.push(...closing);
+    const gap='\u00a0'.repeat(46);
+    tx.push('=c=ลงชื่อ'+gap+role,
+      'คำร้องฉบับนี้ ข้าพเจ้า '+signer+' '+role+' เป็นผู้เรียงและพิมพ์',
+      '=c=ลงชื่อ'+gap+'ผู้เรียงและพิมพ์');
+    n40=0;flow(tx,ps,150,more40(arr,'แผ่นต่อ (๔๐ ก.) คำร้อง'));
+    docSets.push({key,pages:arr});
+  };
+  if(want('petA')&&attachments().length)pet7('petA','อ้างส่งสำเนาเอกสารท้ายคำฟ้อง',d.petA);
+  if(want('petB'))pet7('petB','ขอส่งหมายและปิดหมาย',d.petB);
+
+  /* ---------- (๙) ใบแต่งทนายความ ---------- */
+  if(hasL&&want('f9')){
+    const f9=[],g=newPg(f9,'f9',0,'ใบแต่งทนายความ (๙)');
+    g.t(312,174.5,court,205).t(258,199.9,day,28).t(316,199.9,month,108).t(504,199.9,yy,45).t(286,225.5,'แพ่ง',215)
+     .t(157,256,pAll,337).t(157,329,dAll,337).t(162,369,pAll,330).t(550,369,'โจทก์',50,SIZE,'end').t(174,420.5,L.wName,376).t(216,526.5,L.wName,336)
+     .t(150,655,'( '+L.wName+' )',150,SIZE,'middle').ns().t(388,655,'( '+(PL.length===1?P.name:PL.map(p=>p.name).join(', '))+' )',230,SIZE,'middle').ns();
     const h=newPg(f9,'f9',1,'ใบแต่งทนายความ (๙)');
-    h.t(184,152,L.wName,372);idBoxes(h,ID9,L.wId,185.5);h.t(246,215,L.wLic,72).t(437,215,L.wArea,118);
-    [[239.9,[[248,75,L.wHouse],[349,40,dash(L.wMoo)],[415,142,dash(L.wRoad)]]],[263.9,[[140,174,dash(L.wSoi)],[375,183,L.wSub]]],
-     [287.8,[[141,96,L.wDist],[273,116,L.wProv],[455,100,L.wPost]]],[311.8,[[132,168,dash(L.wTel)],[348,150,dash(L.wFax)]]],[335.7,[[196,300,dash(L.wMail)]]],
-     [359.7,[[229,89,L.wHouse],[344,44,dash(L.wMoo)],[417,140,dash(L.wRoad)]]],[383.6,[[140,174,dash(L.wSoi)],[375,183,L.wSub]]],
-     [407.6,[[141,78,L.wDist],[255,78,L.wProv],[399,52,L.wPost],[495,62,dash(L.wTel)]]],[431.5,[[128,150,dash(L.wFax)],[386,160,dash(L.wMail)]]]]
+    h.t(184,B(104.8),L.wName,310).t(555,B(104.8),'ทนายโจทก์',60,SIZE,'end');idBoxes(h,ID9,L.wId,133);h.t(247,B(167),L.wLic,72).t(437,B(167),L.wArea,120);
+    [[B(190.6),[[248,76,L.wHouse],[350,41,dash(L.wMoo)],[415,143,dash(L.wRoad)]]],[B(214.2),[[140,175,dash(L.wSoi)],[375,184,L.wSub]]],
+     [B(237.8),[[141,97,L.wDist],[273,117,L.wProv],[458,99,L.wPost]]],[B(261.4),[[133,169,dash(L.wTel)],[349,209,dash(L.wFax)]]],[B(285),[[197,361,dash(L.wMail)]]],
+     [B(308.5),[[229,90,L.wHouse],[345,43,dash(L.wMoo)],[417,140,dash(L.wRoad)]]],[B(332.1),[[140,175,dash(L.wSoi)],[375,184,L.wSub]]],
+     [B(355.7),[[141,79,L.wDist],[256,78,L.wProv],[400,52,L.wPost],[496,61,dash(L.wTel)]]],[B(379.3),[[128,143,dash(L.wFax)],[386,172,dash(L.wMail)]]]]
      .forEach(([y,xs])=>xs.forEach(([x,m,v])=>h.t(x,y,v,m)));
-    h.t(207,455.5,P.name+' โจทก์',349);
+    h.t(207,B(402.8),pAll,295).t(555,B(402.8),'โจทก์',50,SIZE,'end').t(387,518,'( '+L.wName+' )',230,SIZE,'middle').ns();
+    docSets.push({key:'f9',pages:f9});
   }
 
-  /* (๗) คำร้องขอให้ส่งหมายเรียกและสำเนาคำฟ้อง */
-  const q=newPg(pet7,'f7',0,'คำร้อง (๗)');
-  const who=hasL?{name:L.wName+' ทนายโจทก์',id:L.wId,race:'ไทย',nat:'ไทย',occ:'ทนายความ',age:L.wAge,houseNo:L.wHouse,moo:L.wMoo,road:L.wRoad,soi:L.wSoi,sub:L.wSub,dist:L.wDist,prov:L.wProv,post:L.wPost,tel:L.wTel,fax:L.wFax,mail:L.wMail}
-    :Object.assign({},P,{name:P.name+' โจทก์',id:P.idCard});
-  q.t(341,160.5,court,198).t(291,185.5,day,30).t(348,185.5,month,90).t(515,185.5,yy,28).t(318,210.5,'แพ่ง',150)
-   .t(152,289.5,P.name,340).t(152,335.7,D.name,340).t(207,365.4,who.name,338);
-  idBoxes(q,ID7,who.id,388);
-  q.t(123,414.1,who.race,48).t(209,414.1,who.nat,40).t(279,414.1,who.occ,78).t(106,441.8,who.age,28);
-  [[441.8,[[210,66,who.houseNo],[300,39,dash(who.moo)],[362,185,dash(who.road)]]],[462.9,[[137,104,dash(who.soi)],[298,91,who.sub],[442,105,who.dist]]],
-   [487.9,[[119,134,who.prov],[315,69,who.post],[425,121,dash(who.tel)]]],[512.9,[[123,143,dash(who.fax)],[380,166,dash(who.mail)]]]]
-   .forEach(([y,xs])=>xs.forEach(([x,m,v])=>q.t(x,y,v,m)));
-  [[157.9,194.3,87.5],[206.2,231.3,87.5],[152.7,189.1,534.5],[201,226.1,534.5],[485.6,516.4,784.5],[528.3,547.8,784.5]].forEach(([x0,x1,y])=>q.line(x0-1,y,x1+1,y));
-  const r=newPg(pet7,'f7',1,'คำร้อง (๗)');
-  const ps=[{p:q,x:183,b:571.8,w:363},...[605.7,639.6,673.5].map(b=>({p:q,x:88,b,w:458}))];
-  for(let k=0;k<21;k++)ps.push({p:r,x:88,b:88.6+33.9*k-8.8,w:470});
-  n40=0;flow(pet,ps,150,more40(pet7));
+  /* ---------- (๑๕) บัญชีพยาน ---------- */
+  if(want('f15')){
+    const wit=paras(d.wit);
+    if(wit.length>25)throw new Error('บัญชีพยานมีได้ไม่เกิน ๒๕ อันดับในแบบพิมพ์ ๒ หน้า');
+    const s15=[],g=newPg(s15,'f15',0,'บัญชีพยาน (๑๕)');
+    g.t(151,95.9,'โจทก์').ns().t(291,B(202.5),court,249).t(243,B(226.2),day,36).t(306,B(226.2),month,97).t(480,B(226.2),yy,47).t(268,B(249.7),'แพ่ง',100)
+     .t(128,B(289.1),pAll,388).t(128,B(361.8),dAll,388).t(165,B(388.9),hasL?L.wName:pAll,320).t(549,B(388.9),role,60,SIZE,'end').t(234,B(412.4),toTh(wit.length),71,SIZE,'middle')
+     .t(437.5,792,'( '+signer+' )',200,SIZE,'middle').ns();
+    const h=newPg(s15,'f15',1,'บัญชีพยาน (๑๕)');
+    h.t(430,812,'( '+signer+' )',200,SIZE,'middle').ns();
+    const rows=[...[485.5,521,557,593,629,665,700.5].map(t=>({p:g,t,c:[51,92,243.5,456,531.5]})),...Array.from({length:18},(_,k)=>({p:h,t:102.5+36*k,c:[51,92,242.5,496,552.5]}))];
+    wit.forEach((w,i)=>{const r=rows[i],c=r.c,cw=c[2]-c[1]-8;
+      r.p.t((c[0]+c[1])/2,r.t+23.5,toTh(i+1)+'.',null,SIZE,'middle').ns().t((c[3]+c[4])/2,r.t+23.5,'นำ',null,SIZE,'middle').ns();
+      let ls,sz;for(sz of [16,14,13]){ls=wrap(w,()=>cw,sz);if(ls.length<=2)break}
+      if(ls.length===1)r.p.t(c[1]+4,r.t+23.5,ls[0],cw,sz).ns();else{r.p.t(c[1]+4,r.t+16,ls[0],cw,sz).ns().t(c[1]+4,r.t+31,ls.slice(1).join(' '),cw,sz).ns()}});
+    docSets.push({key:'f15',pages:s15});
+  }
 
-  /* page numbers: the complaint set runs on from (๔) to (๕); other papers number their own pages */
-  const pn=(p,n)=>p.t(PW/2,p.form==='f40'&&p.idx===0?74:48,'- '+toTh(n)+' -',null,SIZE,'middle');
-  comp.forEach((p,i)=>{if(i)pn(p,i+1)});f9.forEach((p,i)=>{if(i)pn(p,i+1)});pet7.forEach((p,i)=>{if(i)pn(p,i+1)});
-  return {comp,f9,pet7,certifier:hasL?{name:L.wName,role:'ทนายโจทก์'}:{name:P.name,role:'โจทก์'}};
+  /* page numbers: from page ๒ of each document; the complaint set runs on from (๔) to (๕) */
+  docSets.forEach(s=>!s.noNum&&(s.pages||[]).forEach((p,i)=>{if(i)p.t(PW/2,p.form==='f40'?(p.idx===0?74:62):(p.form==='f15'||p.form==='f12'?30:48),'- '+toTh(i+1)+' -',null,SIZE,'middle').ns()}));
+  return {docSets,certifier:{name:signer,role}};
 }
 
 async function overlayPng(p){
   const c=document.createElement('canvas');c.width=Math.round(p.w*K);c.height=Math.round(p.h*K);
   const x=c.getContext('2d');x.fillStyle='#000';x.strokeStyle='#000';x.textBaseline='alphabetic';
   for(const it of p.items){
+    if(it.k==='r'){x.lineWidth=0.9*K;x.strokeRect(it.x*K,it.y*K,it.w*K,it.h*K);continue}
+    if(it.k==='w')continue; /* drawn as a vector rectangle in build() */
     if(it.k==='l'){x.lineWidth=0.8*K;x.beginPath();x.moveTo(it.x1*K,it.y1*K);x.lineTo(it.x2*K,it.y2*K);x.stroke();continue}
     if(it.k==='j'){ /* Thai distributed justification: spread the spare width over the word gaps */
       const nat=it.toks.reduce((s,t)=>s+t[1],0),gaps=it.toks.length-1;
@@ -618,6 +811,30 @@ async function overlayPng(p){
   }
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));return new Uint8Array(await blob.arrayBuffer());
 }
+/* Snap every typed line onto the printed line under it: the form page is rendered, the first dotted or
+   solid line below each text is found inside the text's own width, and the text is set GAP pt above it. */
+const GAP=1.7,formBytes={},rasterCache={};
+async function getBytes(name){if(!formBytes[name]){const r=await fetch('forms/'+name+'.pdf');if(!r.ok)throw new Error('โหลดแบบพิมพ์ไม่ได้');formBytes[name]=new Uint8Array(await r.arrayBuffer())}return formBytes[name]}
+async function formRaster(form,idx){
+  const key=form+'#'+idx;if(rasterCache[key])return rasterCache[key];
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const doc=await pdfjsLib.getDocument({data:(await getBytes(form)).slice(0)}).promise,pg=await doc.getPage(idx+1),S=2,vp=pg.getViewport({scale:S});
+  const c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  await pg.render({canvasContext:x,viewport:vp}).promise;
+  return rasterCache[key]={w:c.width,h:c.height,d:x.getImageData(0,0,c.width,c.height).data,S};
+}
+function snap(p,R){
+  const dark=(px,py)=>{const i=(py*R.w+px)*4;return R.d[i]+R.d[i+1]+R.d[i+2]<450};
+  for(const it of p.items){
+    if(it.ns||(it.k!=='t'&&it.k!=='j'))continue;
+    const w=it.k==='j'?(it.w||it.toks.reduce((s,t)=>s+t[1],0)):Math.min(mw(it.s,it.sz),it.maxw||1e9);
+    const x0=it.k==='j'||it.anchor==='start'?it.x:it.anchor==='middle'?it.x-w/2:it.x-w;
+    const a=Math.round((x0+2)*R.S),b=Math.round((x0+Math.min(w,180)-2)*R.S);if(b-a<10)continue;
+    for(let yy=it.b-4;yy<=it.b+10;yy+=0.5){const py=Math.round(yy*R.S);if(py<0||py>=R.h)break;
+      let n=0;for(let px=a;px<b;px++)if(dark(px,py))n++;
+      if(n/(b-a)>0.2){it.b=yy-GAP;break}}
+  }
+}
 const formCache={};
 async function formDoc(name){
   if(!formCache[name]){const r=await fetch('forms/'+name+'.pdf');if(!r.ok)throw new Error('โหลดแบบพิมพ์ไม่ได้');formCache[name]=await PDFLib.PDFDocument.load(await r.arrayBuffer())}
@@ -626,14 +843,15 @@ async function formDoc(name){
 async function build(){
   await document.fonts.load(font(16,1),'กขค');await document.fonts.load(font(16,1),'A1');
   const L=layout(),out=await PDFLib.PDFDocument.create(),labels=[];
-  const put=async list=>{for(const p of list){const src=await formDoc(p.form);const [pg]=await out.copyPages(src,[p.idx]);out.addPage(pg);
-    const im=await out.embedPng(await overlayPng(p));pg.drawImage(im,{x:0,y:0,width:PW,height:PH});labels.push(p.label)}};
-  await put(L.comp);
+  const put=async list=>{for(const p of list){const src=await formDoc(p.form);snap(p,await formRaster(p.form,p.idx));const [pg]=await out.copyPages(src,[p.idx]);out.addPage(pg);
+    const {width,height}=pg.getSize(),sy=height/PH;
+    p.items.filter(it=>it.k==='w').forEach(it=>pg.drawRectangle({x:it.x,y:height-(it.y+it.h)*sy,width:it.w,height:it.h*sy,color:PDFLib.rgb(1,1,1)}));
+    const im=await out.embedPng(await overlayPng(p));pg.drawImage(im,{x:0,y:0,width,height});labels.push(p.label)}};
   /* เอกสารท้ายคำฟ้อง */
   const stamp=(w,h,no)=>{const p=new Pg(null,0,'');p.w=w;p.h=h;
     p.t(w-40,34,'เอกสารท้ายคำฟ้องหมายเลข '+no,null,SIZE,'end');
     p.t(w-110,h-60,'สำเนาถูกต้อง',null,SIZE,'middle').t(w-110,h-38,'( '+L.certifier.name+' )',null,SIZE,'middle').t(w-110,h-18,L.certifier.role,null,SIZE,'middle');return p};
-  for(const a of attachments()){
+  const putAtt=async()=>{for(const a of attachments()){
     for(const f of a.files){
       if(f.mime==='application/pdf'){
         const src=await PDFLib.PDFDocument.load(unb64(f.data),{ignoreEncryption:true});
@@ -646,9 +864,12 @@ async function build(){
         const im=await out.embedPng(await overlayPng(stamp(PW,PH,a.no)));pg.drawImage(im,{x:0,y:0,width:PW,height:PH});labels.push('เอกสารท้ายคำฟ้องหมายเลข '+a.no);
       }
     }
+  }};
+  for(const ds of L.docSets){
+    if(ds.key==='att'){if((W.docs||['att']).includes('att'))await putAtt()}
+    else await put(ds.pages);
   }
-  await put(L.f9);await put(L.pet7);
-  out.setTitle('ชุดคำฟ้อง '+(party('P').name||''));out.setCreator('ตัวอย่างร่างเอกสารกฎหมาย lawyerthaiai.com');
+  out.setTitle('ชุดคำฟ้อง '+((plist('P')[0]||{}).name||''));out.setCreator('ตัวอย่างร่างเอกสารกฎหมาย lawyerthaiai.com');
   return {bytes:await out.save(),labels};
 }
 
@@ -659,7 +880,7 @@ $('buildBtn').onclick=async()=>{
   try{
     const {bytes,labels}=await build();
     lastBlob=new Blob([bytes],{type:'application/pdf'});
-    lastName='ชุดคำฟ้อง_'+(party('D').name||'จำเลย').replace(/\s+/g,'_')+'.pdf';
+    lastName='ชุดคำฟ้อง_'+((plist('D')[0]||{}).name||'จำเลย').replace(/\s+/g,'_')+'.pdf';
     const a=$('dl');if(a.href)URL.revokeObjectURL(a.href);a.href=URL.createObjectURL(lastBlob);a.download=lastName;
     $('outInfo').textContent=toTh(labels.length)+' หน้า';
     $('shareBtn').hidden=!(navigator.canShare&&navigator.canShare({files:[new File([lastBlob],lastName,{type:'application/pdf'})]}));
@@ -685,10 +906,10 @@ async function preview(bytes,labels){
 /* ---------- boot ---------- */
 (async()=>{
   try{files=(await DB.get('files'))||[]}catch(e){files=[]}
-  drawFiles();
+  drawFiles();setTab(LS.get('cTab',0)===1);
   if(!user)show(1);
   else if(W.step===4&&W.d){loadForm();drawDraft();show(4)}
-  else if(W.step===3&&W.x){loadForm();show(3)}
+  else if(W.step===3&&(W.x||W.parties)){loadForm();show(3)}
   else show(2);
   refreshQuota();
   if(!API){$('trial').textContent='ระบบยังไม่ได้เชื่อมต่อหลังบ้าน';$('trial').style.color='#8a1c12';$('trial').style.background='#fdecea'}

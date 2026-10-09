@@ -53,6 +53,7 @@ function doPost(e) {
       case 'register': return json(register(req));
       case 'extract': return json(extract(req));
       case 'draft': return json(draft(req));
+      case 'cStart': return json(cStart(req));
       case 'cExtract': return json(cExtract(req));
       case 'cDraft': return json(cDraft(req));
       case 'admin': return json(admin(req));
@@ -108,7 +109,7 @@ function todayCounts(userId) {
   const take = Math.min(n, 3000); // recent rows are enough for a daily count
   const rows = sh.getRange(sh.getLastRow() - take + 1, 1, take, 14).getValues();
   let user = 0, total = 0;
-  rows.forEach(r => { if ((r[4] === 'extract' || r[4] === 'c_extract') && r[13] === 'ok' && new Date(r[0]) >= start) { total++; if (r[2] === userId) user++; } });
+  rows.forEach(r => { if ((r[4] === 'extract' || r[4] === 'c_extract' || r[4] === 'c_start') && r[13] === 'ok' && new Date(r[0]) >= start) { total++; if (r[2] === userId) user++; } });
   return { user, total };
 }
 
@@ -274,7 +275,7 @@ function admin(req) {
   const users = rows(SHEET_USERS, USER_HEAD), jobs = rows(SHEET_JOBS, JOB_HEAD);
   const day0 = new Date(); day0.setHours(0, 0, 0, 0);
   const month0 = new Date(day0.getFullYear(), day0.getMonth(), 1);
-  const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract') && j.status === 'ok');
+  const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract' || j.stage === 'c_start') && j.status === 'ok');
   const sum = (a, k) => Math.round(a.reduce((s, j) => s + (+j[k] || 0), 0) * 100) / 100;
   return {
     ok: true,
@@ -311,8 +312,8 @@ function clean(s, n) { return String(s == null ? '' : s).replace(/[\u0000-\u001f
 function json(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 /* =====================================================================
- * AI ร่างฟ้องคดีผิดสัญญากู้ยืมเงิน (/complaint/)
- * ขั้น ๑ cExtract: อ่านสัญญาและเอกสาร  ขั้น ๒ cDraft: ร่างคำฟ้อง คำขอท้ายฟ้อง คำร้องขอส่งหมาย
+ * AI ร่างคำฟ้องคดีแพ่ง (/complaint/)
+ * ขั้น ๑ cExtract: อ่านสัญญาและเอกสาร (หรือ cStart: ผู้ใช้กรอกเอง ไม่มีไฟล์)  ขั้น ๒ cDraft: ร่างคำฟ้อง คำขอท้ายฟ้อง คำร้องขอส่งหมาย
  * ระบบไม่เก็บไฟล์ ชื่อคู่ความ หรือข้อความที่ร่าง (บันทึกเฉพาะสถิติงาน)
  * ===================================================================== */
 const C_EXTRACT_PROMPT = `คุณเป็นผู้ช่วยทนายความไทย อ่านเอกสารที่แนบมาทุกไฟล์ (สัญญากู้ยืมเงิน หนังสือทวงถาม ใบตอบรับ ฯลฯ) ไฟล์เรียงลำดับ ๑, ๒, ๓ … ตามที่แนบ
@@ -360,19 +361,30 @@ function cExtract(req) {
   return { ok: true, jobId, data };
 }
 
-const C_DRAFT_SYSTEM = `คุณเป็นทนายความไทยผู้เชี่ยวชาญคดีแพ่ง ร่างคำฟ้องคดีผิดสัญญากู้ยืมเงินด้วยภาษากฎหมายที่เป็นทางการ ตามแบบที่ใช้ยื่นศาลยุติธรรม
+/* ผู้ใช้กรอกข้อมูลเอง: ไม่เรียก AI แค่ตรวจสิทธิ์ นับโควตา และออกเลขงาน */
+function cStart(req) {
+  const stop = checkAllowed(req.userId);
+  if (stop) return { ok: false, error: stop };
+  const jobId = 'C' + Utilities.getUuid().slice(0, 7);
+  logJob(jobId, req.userId, 'c_start', 0, { court: '', caseKind: 'แพ่ง', matter: clean(req.charge, 80) }, null, 0, 'ok', '');
+  bumpUser(req.userId);
+  return { ok: true, jobId };
+}
+
+const C_DRAFT_SYSTEM = `คุณเป็นทนายความไทยผู้เชี่ยวชาญคดีแพ่ง ร่างคำฟ้องตามข้อหาและข้อเท็จจริงที่ให้ ด้วยภาษากฎหมายที่เป็นทางการ ตามแบบที่ใช้ยื่นศาลยุติธรรม
 - ใช้เลขไทยทั้งหมด
 - ใช้เฉพาะข้อเท็จจริงจากข้อมูลที่ให้ ห้ามแต่งเพิ่ม ส่วนที่ไม่ทราบให้เขียน [ระบุ…]
-- จำนวนเงิน จำนวนวัน และดอกเบี้ย ให้ใช้ตัวเลขใน "ยอดหนี้ที่คำนวณแล้ว" เท่านั้น ห้ามคำนวณใหม่ แสดงวิธีคิดตามข้อมูลนั้น
-- อ้างเอกสารท้ายคำฟ้องตามหมายเลขที่กำหนดให้เท่านั้น
+- ถ้ามี "ยอดหนี้ที่คำนวณแล้ว" ให้ใช้ตัวเลขนั้นเท่านั้น ห้ามคำนวณใหม่ แสดงวิธีคิดตามข้อมูลนั้น
+- ถ้ามี "ทุนทรัพย์ที่ผู้ใช้ระบุ" ให้ใช้ยอดนั้นเป็นทุนทรัพย์ แยกรายการตามที่ผู้ใช้ให้มา ถ้าแยกไม่ได้ให้เขียน [ระบุรายการ…] ห้ามสร้างตัวเลขเอง
+- ถ้ามีโจทก์หรือจำเลยหลายคน ให้เรียกว่า โจทก์ที่ ๑ โจทก์ที่ ๒ / จำเลยที่ ๑ จำเลยที่ ๒ ระบุฐานะและความรับผิดของแต่ละคนตามข้อเท็จจริง (เช่น ผู้กู้ ผู้ค้ำประกัน รับผิดร่วมกันหรือแทนกัน) และคำขอท้ายคำฟ้องให้ระบุว่าจำเลยคนใดต้องรับผิด
+- อ้างเอกสารท้ายคำฟ้องตามหมายเลขที่กำหนดให้เท่านั้น ถ้าไม่มีเอกสาร ให้เขียน [ระบุเอกสาร…] ในจุดที่ควรอ้าง
 - ตอบเป็น JSON อย่างเดียว ไม่มี markdown`;
 
 const C_DRAFT_FORMAT = `ตอบ JSON รูปแบบนี้:
 {
  "charge": "ข้อหาหรือฐานความผิด สั้น ๆ เช่น ผิดสัญญากู้ยืมเงิน",
- "body": ["คำฟ้องเป็นข้อ ๆ ย่อหน้าแรกไม่ต้องขึ้นต้นด้วย 'ข้อ ๑' (แบบพิมพ์มีแล้ว) ย่อหน้าถัดไปขึ้นต้นด้วย 'ข้อ ๒.' 'ข้อ ๓.' … ข้อแรกบรรยายฐานะคู่ความและเขตอำนาจศาล ข้อถัดมาบรรยายการกู้ยืม ข้อสัญญา การผิดนัด การทวงถาม และยอดหนี้พร้อมวิธีคิด ข้อสุดท้ายสรุปว่าโจทก์จึงต้องนำคดีมาฟ้อง"],
- "relief": ["คำขอท้ายคำฟ้องไม่เกิน ๔ ข้อ ข้อละประโยค ไม่ต้องใส่เลขข้อ แต่ละข้อไม่เกินประมาณ ๑๘๐ ตัวอักษร"],
- "petition": ["คำร้องขอให้ออกหมายเรียกและส่งสำเนาคำฟ้องแก่จำเลย ย่อหน้าแรกไม่ต้องขึ้นต้นด้วย 'ข้อ ๑' ระบุภูมิลำเนาจำเลย ขอให้เจ้าพนักงานศาลเป็นผู้ส่ง หากไม่พบหรือไม่มีผู้รับแทนขอให้ปิดหมาย โจทก์ยินดีชำระค่าใช้จ่าย ย่อหน้าสุดท้าย 'จึงเรียนมาเพื่อโปรดพิจารณาอนุญาต'"],
+ "body": ["คำฟ้องเป็นข้อ ๆ ย่อหน้าแรกไม่ต้องขึ้นต้นด้วย 'ข้อ ๑' (แบบพิมพ์มีแล้ว) ย่อหน้าถัดไปขึ้นต้นด้วย 'ข้อ ๒.' 'ข้อ ๓.' … ข้อแรกบรรยายฐานะคู่ความและเขตอำนาจศาล ข้อถัดมาบรรยายนิติสัมพันธ์ (เช่น การกู้ยืม การว่าจ้าง ตัวแทน) ข้อสัญญา การผิดนัด การทวงถาม และยอดหนี้พร้อมวิธีคิด ข้อสุดท้ายสรุปว่า โจทก์ไม่มีหนทางอื่นที่จะบังคับให้จำเลยชำระหนี้ได้ จึงนำคดีมาฟ้องต่อศาล เพื่อขอบารมีศาลเป็นที่พึ่ง บังคับจำเลยต่อไป (ไม่ต้องเขียน 'ควรมิควรแล้วแต่จะโปรด' ระบบเติมให้)"],
+ "relief": ["คำขอท้ายคำฟ้องเฉพาะเรื่องเงินหรือการบังคับตามฟ้อง ไม่เกิน ๓ ข้อ ข้อละประโยค ไม่ต้องใส่เลขข้อ แต่ละข้อไม่เกินประมาณ ๑๘๐ ตัวอักษร ไม่ต้องใส่ข้อค่าฤชาธรรมเนียม (ระบบเติม 'ให้จำเลยชำระค่าฤชาธรรมเนียมและค่าทนายความแทนโจทก์' ให้เอง) และห้ามมีข้อ 'คำขออื่นตามที่ศาลเห็นสมควร'"],
  "notes": ["สิ่งที่ทนายต้องตรวจหรือเติมก่อนยื่น"]
 }`;
 
@@ -383,7 +395,7 @@ function cDraft(req) {
   if (!st.registered || st.blocked) return { ok: false, error: 'ไม่สามารถใช้งานได้' };
   if (!req.jobId || draftCount(req.jobId) >= 3) return { ok: false, error: 'คดีนี้ให้ AI ร่างใหม่ครบ 3 ครั้งแล้ว กรุณาแก้ไขข้อความเอง หรือเริ่มคดีใหม่' };
   const c = req.caseData || {};
-  const meta = { court: c.ศาล || '', caseKind: 'แพ่ง', matter: 'ฟ้องผิดสัญญากู้ยืมเงิน' };
+  const meta = { court: c.ศาล || '', caseKind: 'แพ่ง', matter: clean(c.ข้อหา || 'ฟ้องคดีแพ่ง', 80) };
   const user = 'ข้อมูลคดี:\n' + clean(JSON.stringify(c, null, 1), 20000) + '\n\n' + C_DRAFT_FORMAT;
   let res, data;
   try {
@@ -395,5 +407,5 @@ function cDraft(req) {
     return { ok: false, error: 'AI ร่างคำฟ้องไม่สำเร็จ ลองกดร่างใหม่อีกครั้ง' };
   }
   logJob(req.jobId, req.userId, 'c_draft', 0, meta, res, Date.now() - t0, 'ok', '');
-  return { ok: true, charge: data.charge || '', body: data.body, relief: data.relief || [], petition: data.petition || [], notes: data.notes || [] };
+  return { ok: true, charge: data.charge || '', body: data.body, relief: data.relief || [], notes: data.notes || [] };
 }

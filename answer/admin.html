@@ -100,7 +100,7 @@ function draw(){
   $('sOpen').checked=st.SERVICE_OPEN;$('sUser').value=st.LIMIT_USER_DAY;$('sTotal').value=st.LIMIT_TOTAL_DAY;$('model').textContent='โมเดล: '+st.MODEL;
   drawUsers();
   const jb=$('jobs');jb.innerHTML='';
-  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านสัญญา',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
+  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านเอกสาร',c_start:'ร่างฟ้อง: กรอกเอง',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
     cell(tr,n(j.tokensIn)+' / '+n(j.tokensOut),'num');cell(tr,j.costTHB,'num');cell(tr,((+j.ms||0)/1000).toFixed(1),'num');
     cell(tr,pill(j.status==='ok'?'สำเร็จ':j.status==='unreadable'?'อ่านไม่ออก':'ผิดพลาด',j.status==='ok'?'ok':j.status==='unreadable'?'mid':'bad')).title=j.error||'';jb.append(tr)});
 }
