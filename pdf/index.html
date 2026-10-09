@@ -742,7 +742,7 @@ async function importJob(j){
 
 let rw,lastW=innerWidth;addEventListener('resize',()=>{clearTimeout(rw);rw=setTimeout(()=>{if(S.pdf&&innerWidth!==lastW){lastW=innerWidth;render()}},200)});
 
-if(/aifree\.in\.th$/.test(location.hostname))$('homeLink').hidden=false;
+if(/(^|\.)lawyerthaiai\.com$/.test(location.hostname))$('homeLink').hidden=false;
 syncTools();buildGallery();refreshDraft();
 if(/[?&]import=1/.test(location.search)){const j=LS.get('pdfImport',null);if(j){try{localStorage.removeItem('pdfImport')}catch(e){}importJob(j).catch(e=>{console.error(e);toast('นำเข้าข้อความไม่สำเร็จ')})}try{history.replaceState(null,'',location.pathname)}catch(e){}}
 })();

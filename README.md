@@ -1,13 +1,13 @@
-# aifree.in.th
+# ตัวอย่างร่างเอกสารกฎหมาย (lawyerthaiai.com)
 
-เว็บรวมเครื่องมือฟรี โฮสต์บน GitHub Pages
+เว็บรวมเครื่องมือสำหรับงานกฎหมาย โฮสต์บน GitHub Pages
 
 ## โครงสร้าง
 - `index.html` หน้าแรก แสดงการ์ดจาก `apps.js`
 - `apps.js` รายชื่อแอป (เพิ่มแอปใหม่ที่นี่)
 - `style.css` หน้าตากลาง
-- `CNAME` โดเมน aifree.in.th (ห้ามลบ)
-- `pdf/` แอปกรอก PDF → https://aifree.in.th/pdf/
+- `CNAME` โดเมน lawyerthaiai.com (ห้ามลบ)
+- `pdf/` แอปกรอก PDF → https://lawyerthaiai.com/pdf/
 
 ## เพิ่มแอปใหม่
 1. สร้างโฟลเดอร์ใหม่ เช่น `calc/` แล้ววางไฟล์ `index.html` ของแอปลงไป

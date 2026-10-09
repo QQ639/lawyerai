@@ -1,5 +1,5 @@
 /**
- * aifree.in.th — หลังบ้านของ AI ช่วยพิมพ์คำให้การจำเลย และ AI ร่างฟ้องคดีกู้ยืมเงิน (ใช้ร่วมกัน)
+ * lawyerthaiai.com — หลังบ้านของ AI ช่วยพิมพ์คำให้การจำเลย และ AI ร่างฟ้องคดีกู้ยืมเงิน (ใช้ร่วมกัน)
  * Google Apps Script + Google Sheets + Claude API
  *
  * ติดตั้ง: ดูไฟล์ SETUP.md
@@ -41,7 +41,7 @@ function setup() {
 
 /* ---------- web entry ---------- */
 function doGet() {
-  return json({ ok: true, service: 'aifree answer', open: prop('SERVICE_OPEN', 'true') === 'true' });
+  return json({ ok: true, service: 'lawyerthaiai', open: prop('SERVICE_OPEN', 'true') === 'true' });
 }
 
 function doPost(e) {

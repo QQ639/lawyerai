@@ -3,14 +3,14 @@
 ทั้งสองแอปใช้หลังบ้าน (Code.gs) และ config.js ชุดเดียวกัน ผู้ใช้ลงทะเบียนครั้งเดียวใช้ได้ทั้งสองแอป โควตาต่อวันนับรวมกัน
 
 ## ส่วนประกอบ
-- `answer/index.html` หน้าใช้งาน → https://aifree.in.th/answer/
-- `answer/admin.html` หลังบ้าน → https://aifree.in.th/answer/admin.html
+- `answer/index.html` หน้าใช้งาน → https://lawyerthaiai.com/answer/
+- `answer/admin.html` หลังบ้าน → https://lawyerthaiai.com/answer/admin.html
 - `answer/config.js` ใส่ URL ระบบหลังบ้าน
-- `complaint/index.html` + `complaint/forms/*.pdf` + `complaint/fonts/*` หน้าร่างฟ้อง → https://aifree.in.th/complaint/
+- `complaint/index.html` + `complaint/forms/*.pdf` + `complaint/fonts/*` หน้าร่างฟ้อง → https://lawyerthaiai.com/complaint/
 - `answer/backend/Code.gs` โค้ดหลังบ้าน (วางใน Google Apps Script — ไม่ต้องอัปขึ้น GitHub ก็ได้)
 
 ## ขั้นตอน (ทำครั้งเดียว ~15 นาที)
-1. สร้าง Google Sheet ใหม่ ตั้งชื่อ "aifree คำให้การ"
+1. สร้าง Google Sheet ใหม่ ตั้งชื่อ "lawyerthaiai หลังบ้าน"
 2. เมนู ส่วนขยาย → Apps Script ลบโค้ดเดิม วางโค้ดจาก `Code.gs` แล้วกดบันทึก
 3. ⚙️ การตั้งค่าโปรเจ็กต์ → Script Properties → เพิ่ม
    - `CLAUDE_API_KEY` = API key จาก console.anthropic.com
@@ -21,7 +21,7 @@
    - ผู้มีสิทธิ์เข้าถึง: **ทุกคน**
    - กด Deploy แล้วคัดลอก URL ที่ลงท้ายด้วย `/exec`
 6. เปิด `answer/config.js` วาง URL ระหว่าง "..." แล้วอัปโหลดขึ้น GitHub
-7. ทดสอบที่ https://aifree.in.th/answer/ และเข้าหลังบ้านที่ /answer/admin.html
+7. ทดสอบที่ https://lawyerthaiai.com/answer/ และเข้าหลังบ้านที่ /answer/admin.html
 
 ## แก้โค้ดหลังบ้านภายหลัง
 แก้ใน Apps Script แล้ว Deploy → จัดการการทำให้ใช้งานได้ → ✏️ แก้ไข → เวอร์ชัน: เวอร์ชันใหม่ → Deploy (URL เดิมใช้ต่อได้)
@@ -43,7 +43,7 @@
 - **ไม่เก็บ** ไฟล์คำฟ้อง ชื่อคู่ความ ข้อเท็จจริงที่ผู้ใช้เล่า หรือข้อความคำให้การ
 
 ## ทดสอบหน้าจอโดยไม่ต่อหลังบ้าน
-เปิด https://aifree.in.th/answer/?mock=1 (ใช้ข้อมูลตัวอย่าง ไม่เรียก AI จริง)
+เปิด https://lawyerthaiai.com/answer/?mock=1 (ใช้ข้อมูลตัวอย่าง ไม่เรียก AI จริง)
 
 ## อัปเดตเพื่อเปิดแอปร่างฟ้อง (ถ้าเคยติดตั้งคำให้การไว้แล้ว)
 1. วางโค้ด `Code.gs` ฉบับใหม่ทับใน Apps Script → บันทึก

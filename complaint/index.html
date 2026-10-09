@@ -76,7 +76,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 </style>
 </head>
 <body>
-<header class="site-head"><div class="wrap"><a class="logo" href="/"><span class="logo-mark">AI</span><span>aifree<small>.in.th</small></span></a></div></header>
+<header class="site-head"><div class="wrap"><a class="logo" href="/"><span class="logo-mark">AI</span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a></div></header>
 
 <main class="page">
   <a class="back" href="/">← เครื่องมือทั้งหมด</a>
@@ -217,7 +217,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
   </section>
 </main>
 
-<footer class="site-foot"><div class="wrap"><span>© <span id="yr"></span> aifree.in.th</span><span>ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</span></div></footer>
+<footer class="site-foot"><div class="wrap"><span>© <span id="yr"></span> ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com</span><span>ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</span></div></footer>
 <div class="toast" id="toast" hidden></div>
 
 <script src="../answer/config.js"></script>
@@ -231,7 +231,7 @@ const API=(window.ANSWER_API||'').trim();
 $('yr').textContent=new Date().getFullYear()+543;
 let toastT;const toast=t=>{const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,3000)};
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const DB=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('aifreeComplaint',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const DB=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('lawComplaint',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   const tx=(m,f)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction('kv',m),s=t.objectStore('kv'),q=f(s);t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)}));
   return{get:k=>tx('readonly',s=>s.get(k)),set:(k,v)=>tx('readwrite',s=>s.put(v,k))}})();
 const TH='๐๑๒๓๔๕๖๗๘๙',toTh=s=>String(s==null?'':s).replace(/[0-9]/g,d=>TH[d]),toAr=s=>String(s==null?'':s).replace(/[๐-๙]/g,d=>TH.indexOf(d));
@@ -648,7 +648,7 @@ async function build(){
     }
   }
   await put(L.f9);await put(L.pet7);
-  out.setTitle('ชุดคำฟ้อง '+(party('P').name||''));out.setCreator('aifree.in.th');
+  out.setTitle('ชุดคำฟ้อง '+(party('P').name||''));out.setCreator('ตัวอย่างร่างเอกสารกฎหมาย lawyerthaiai.com');
   return {bytes:await out.save(),labels};
 }
 
