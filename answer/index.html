@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI ช่วยพิมพ์คำให้การ</title>
+<meta name="description" content="อัปโหลดคำฟ้อง แล้วให้ AI ช่วยพิมพ์ตัวอย่างคำให้การจำเลย เพื่อนำไปแก้ไขต่อและปรึกษาทนายความ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<style>
+/* Layout: one narrow column of numbered steps; each step is a panel that unlocks after the previous one. */
+.page{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;width:100%}
+.back{display:inline-block;color:var(--ink);text-decoration:none;font-size:15px;font-weight:500;margin-bottom:10px}
+.back:hover{text-decoration:underline}
+.title{margin:0;font-family:var(--display);font-size:clamp(26px,4.6vw,36px);line-height:1.3;font-weight:700;text-wrap:balance}
+.sub{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:60ch}
+.warn{margin:18px 0 0;padding:14px 16px;border-radius:12px;background:#fff8e6;border:1px solid #f1d89a;color:#5c4300;font-size:15px;line-height:1.6;display:flex;gap:10px}
+.warn b{color:#4a3600}
+.warn svg{flex:none;width:22px;height:22px;margin-top:2px;color:#b07800}
+.trial{display:inline-block;margin-top:14px;font-size:13px;font-weight:600;color:var(--ok);background:var(--ok-soft);padding:4px 12px;border-radius:999px}
+
+.steps{display:flex;gap:6px;margin:26px 0 14px;flex-wrap:wrap}
+.steps span{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-variant-numeric:tabular-nums}
+.steps span.on{border-color:var(--ink);background:var(--ink-soft);color:var(--ink);font-weight:600}
+.steps span.done{color:var(--ok);border-color:#bfe3cd;background:var(--ok-soft)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-top:14px}
+.panel h2{margin:0 0 4px;font-size:20px;font-weight:600}
+.panel .hint{margin:0 0 16px;color:var(--muted);font-size:15px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);min-width:0}
+label.f input,label.f select,label.f textarea,textarea.body{font:inherit;font-size:16px;color:var(--fg);background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%;min-height:46px}
+label.f textarea{min-height:110px;resize:vertical;line-height:1.6}
+textarea.body{min-height:420px;line-height:1.9;font-family:"Sarabun","IBM Plex Sans Thai",sans-serif;font-size:17px;resize:vertical}
+label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-visible,textarea.body:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.req{color:#b42318}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.55;padding:10px 0}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--ink)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;line-height:1.45;cursor:pointer;background:#fff}
+.opt input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--ink);background:var(--ink-soft)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.ghost{background:transparent}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:26px 16px;text-align:center;background:#fbfcfe;display:flex;flex-direction:column;gap:8px;align-items:center}
+.drop.over{border-color:var(--ink);background:var(--ink-soft)}
+.drop b{font-size:16px}.drop span{color:var(--muted);font-size:14px}
+.file-btn{position:relative;overflow:hidden}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:14px}
+.th{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;aspect-ratio:3/4;display:grid;place-items:center;font-size:13px;color:var(--muted);text-align:center;padding:6px}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.th button{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(23,32,46,.75);color:#fff;font-size:15px;cursor:pointer}
+.th .pg{position:absolute;left:6px;bottom:6px;background:rgba(255,255,255,.9);border-radius:6px;padding:0 6px;font-size:12px;color:var(--fg)}
+.busy{display:flex;gap:12px;align-items:center;padding:16px;border-radius:12px;background:var(--ink-soft);color:var(--ink);font-weight:500;margin-top:16px}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(31,69,181,.25);border-top-color:var(--ink);animation:sp 0.9s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.err{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fdecea;border:1px solid #f5c2bd;color:#8a1c12;font-size:15px}
+.summary{display:grid;gap:8px;margin:0 0 16px;padding:14px 16px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:15px}
+.summary ol{margin:4px 0 0;padding-left:22px}
+.summary li{margin:2px 0}
+.sec{font-size:14px;font-weight:600;color:var(--fg);margin:18px 0 8px}
+.checklist{margin:14px 0 0;padding:14px 16px 14px 36px;border-radius:12px;background:#fff8e6;border:1px solid #f1d89a;font-size:15px}
+.checklist li{margin:3px 0}
+.status{font-size:14px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+@media (max-width:640px){.grid2,.grid3,.opts{grid-template-columns:1fr}.panel{padding:18px 16px}}
+</style>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="logo" href="/"><span class="logo-mark">AI</span><span>aifree<small>.in.th</small></span></a>
+  </div>
+</header>
+
+<main class="page">
+  <a class="back" href="/">← เครื่องมือทั้งหมด</a>
+  <h1 class="title">AI ช่วยพิมพ์คำให้การจำเลย</h1>
+  <p class="sub">อัปโหลดภาพหรือไฟล์คำฟ้อง แล้ว AI จะช่วยพิมพ์ตัวอย่างคำให้การ ให้คุณนำไปแก้ไขต่อ และใส่ลงแบบพิมพ์ศาล (๑๑) ได้</p>
+  <div class="warn" role="note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div><b>คำให้การที่ได้เป็นเพียงตัวอย่างที่ AI ช่วยพิมพ์ อาจยังไม่สมบูรณ์ นอกจากจะได้ปรึกษากับทนายความแล้วเท่านั้น</b><br>
+    ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</div>
+  </div>
+  <span class="trial" id="trial">ช่วงทดลองใช้</span>
+
+  <div class="steps" id="steps"><span data-s="1">๑ ลงทะเบียน</span><span data-s="2">๒ อัปโหลดคำฟ้อง</span><span data-s="3">๓ ตรวจข้อมูล</span><span data-s="4">๔ แก้ไขคำให้การ</span></div>
+
+  <!-- step 1 -->
+  <section class="panel" id="s1" hidden>
+    <h2>ลงทะเบียนใช้งาน</h2>
+    <p class="hint">กรอกครั้งเดียว ระบบจำไว้ในเครื่องนี้</p>
+    <form id="regForm" class="grid2" novalidate>
+      <label class="f">ชื่อ-นามสกุล <span class="req">*</span><input id="rName" autocomplete="name" required></label>
+      <label class="f">เบอร์โทรศัพท์ <span class="req">*</span><input id="rPhone" inputmode="tel" autocomplete="tel" required></label>
+      <label class="f">LINE ID<input id="rLine"></label>
+      <label class="f">อีเมล<input id="rEmail" type="email" autocomplete="email"></label>
+      <label class="f full">คุณคือ
+        <select id="rRole"><option>จำเลย (ใช้เอง)</option><option>ญาติหรือผู้แทนจำเลย</option><option>ทนายความ</option><option>นักศึกษากฎหมาย</option><option>อื่น ๆ</option></select></label>
+      <div class="full">
+        <label class="check"><input type="checkbox" id="rC1"><span>ฉันเข้าใจว่าคำให้การที่ได้เป็น<b>ตัวอย่าง</b>ที่ AI ช่วยพิมพ์ อาจยังไม่สมบูรณ์ ต้องตรวจแก้และปรึกษาทนายความก่อนยื่นศาล และไม่ใช่คำแนะนำทางกฎหมาย</span></label>
+        <label class="check"><input type="checkbox" id="rC2"><span>ฉันยินยอมให้เก็บชื่อและช่องทางติดต่อข้างต้นเพื่อบันทึกการใช้งาน และยินยอมให้ส่งเอกสารที่อัปโหลดไปให้ AI ประมวลผล ระบบ<b>ไม่เก็บ</b>ไฟล์เอกสาร ชื่อคู่ความ หรือข้อความคำให้การไว้</span></label>
+      </div>
+      <div class="full row" style="margin-top:4px"><button class="btn primary" type="submit" id="regBtn">เริ่มใช้งาน</button><span class="status" id="regMsg"></span></div>
+    </form>
+  </section>
+
+  <!-- step 2 -->
+  <section class="panel" id="s2" hidden>
+    <h2>อัปโหลดคำฟ้อง</h2>
+    <p class="hint">ถ่ายภาพทุกหน้าของคำฟ้องให้ชัด ตรง และไม่มีเงา หรือใช้ไฟล์ PDF ได้ สูงสุด 12 ไฟล์</p>
+    <div class="drop" id="drop">
+      <b>ลากไฟล์มาวางที่นี่</b><span>ภาพ JPG / PNG หรือ PDF</span>
+      <span class="btn file-btn">เลือกไฟล์ / ถ่ายภาพ<input id="fileIn" type="file" accept="image/*,application/pdf" multiple></span>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="row"><button class="btn primary" id="readBtn" disabled>ให้ AI อ่านคำฟ้อง</button><span class="status" id="quota"></span></div>
+    <div class="busy" id="busy2" hidden><span class="spin"></span><span id="busy2t">AI กำลังอ่านคำฟ้อง ใช้เวลาประมาณ 20–60 วินาที</span></div>
+    <div class="err" id="err2" hidden></div>
+  </section>
+
+  <!-- step 3 -->
+  <section class="panel" id="s3" hidden>
+    <h2>ตรวจข้อมูลที่ AI อ่านได้</h2>
+    <p class="hint">แก้ให้ถูกต้องก่อน ข้อมูลส่วนนี้จะลงในแบบพิมพ์ (๑๑)</p>
+    <div class="summary" id="summary"></div>
+    <div class="grid2">
+      <label class="f">ศาล<input id="fCourt"></label>
+      <label class="f">คดีหมายเลขดำที่<input id="fBlack" placeholder="เช่น ผบ.๑๒๓๔/๒๕๖๙"></label>
+      <label class="f">ความ (ประเภทคดี)<input id="fKind" placeholder="เช่น แพ่ง"></label>
+      <label class="f">จำเลยผู้ให้การ (ข้าพเจ้า)<select id="fWho"></select></label>
+      <label class="f full">โจทก์<input id="fPlaintiff"></label>
+      <label class="f full">จำเลย<input id="fDefendants"></label>
+    </div>
+    <p class="sec">ข้อมูลของผู้ให้การ</p>
+    <div class="grid3">
+      <label class="f">อายุ (ปี)<input id="dAge" inputmode="numeric"></label>
+      <label class="f">เชื้อชาติ<input id="dNat"></label>
+      <label class="f">อาชีพ<input id="dOcc"></label>
+      <label class="f">บ้านเลขที่<input id="dHouse"></label>
+      <label class="f">หมู่ที่<input id="dMoo"></label>
+      <label class="f">ถนน<input id="dRoad"></label>
+      <label class="f">ตรอก/ซอย<input id="dSoi"></label>
+      <label class="f">ตำบล/แขวง<input id="dSub"></label>
+      <label class="f">อำเภอ/เขต<input id="dDist"></label>
+      <label class="f">จังหวัด<input id="dProv"></label>
+      <label class="f">รหัสไปรษณีย์<input id="dPost" inputmode="numeric"></label>
+      <label class="f">โทรศัพท์<input id="dTel" inputmode="tel"></label>
+    </div>
+    <p class="sec">ฝั่งจำเลยจะต่อสู้อย่างไร (เลือกได้หลายข้อ)</p>
+    <div class="opts" id="opts"></div>
+    <label class="f" style="margin-top:12px">เล่าข้อเท็จจริงฝั่งจำเลยเพิ่มเติม (ยิ่งละเอียด ร่างยิ่งตรง)
+      <textarea id="facts" placeholder="เช่น จำเลยกู้เงินจริง ๕๐,๐๐๐ บาท ชำระไปแล้ว ๒๐ งวด งวดละ ๒,๐๐๐ บาท มีหลักฐานการโอน ยอดที่โจทก์ฟ้องรวมดอกเบี้ยและค่าปรับสูงเกินจริง…"></textarea></label>
+    <div class="row"><button class="btn primary" id="draftBtn">ให้ AI ช่วยพิมพ์คำให้การ</button><button class="btn ghost" id="restart3">เริ่มคดีใหม่</button></div>
+    <div class="busy" id="busy3" hidden><span class="spin"></span><span>AI กำลังพิมพ์ตัวอย่างคำให้การ ใช้เวลาประมาณ 30–90 วินาที</span></div>
+    <div class="err" id="err3" hidden></div>
+  </section>
+
+  <!-- step 4 -->
+  <section class="panel" id="s4" hidden>
+    <h2>ตัวอย่างคำให้การ (แก้ไขได้)</h2>
+    <p class="hint">ข้อความด้านล่างต่อจาก "ข้อ ๑." ในแบบพิมพ์ เติมส่วนที่เป็น [ระบุ…] และแก้ให้ตรงกับข้อเท็จจริง</p>
+    <div class="warn" style="margin:0 0 14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01" stroke-linecap="round"/></svg><div>ตัวอย่างนี้อาจยังไม่สมบูรณ์ นอกจากจะได้ปรึกษากับทนายความแล้วเท่านั้น</div></div>
+    <textarea class="body" id="body" aria-label="ข้อความคำให้การ" spellcheck="false"></textarea>
+    <ul class="checklist" id="checklist" hidden></ul>
+    <label class="check"><input type="checkbox" id="thDigits" checked><span>ใช้เลขไทยเมื่อใส่ลงแบบพิมพ์</span></label>
+    <div class="row">
+      <button class="btn primary" id="toForm">ใส่ลงแบบพิมพ์ (๑๑) แล้วดาวน์โหลด PDF</button>
+      <button class="btn" id="copyBtn">คัดลอกข้อความ</button>
+      <button class="btn ghost" id="redraft">ให้ AI พิมพ์ใหม่</button>
+      <button class="btn ghost" id="restart4">เริ่มคดีใหม่</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>© <span id="yr"></span> aifree.in.th</span>
+    <span>ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</span>
+  </div>
+</footer>
+<div class="toast" id="toast" hidden></div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const MOCK=/[?&]mock=1/.test(location.search);
+const API=(window.ANSWER_API||'').trim();
+$('yr').textContent=new Date().getFullYear()+543;
+let toastT;const toast=t=>{const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,3000)};
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const TH='๐๑๒๓๔๕๖๗๘๙',toTh=s=>String(s||'').replace(/[0-9]/g,d=>TH[d]),toAr=s=>String(s||'').replace(/[๐-๙]/g,d=>TH.indexOf(d));
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+
+let user=LS.get('answerUser',null);
+let W=LS.get('answerWork',{});         // working state: extracted, jobId, form fields, body…
+let files=[];                            // {name,mime,data,url,pages}
+const saveW=()=>LS.set('answerWork',W);
+
+/* ---------- API ---------- */
+async function api(action,payload){
+  if(MOCK)return mock(action,payload);
+  if(!API)throw new Error('ยังไม่ได้ตั้งค่าระบบหลังบ้าน (config.js)');
+  const r=await fetch(API,{method:'POST',body:JSON.stringify(Object.assign({action},payload))});
+  if(!r.ok)throw new Error('เชื่อมต่อระบบไม่ได้ ('+r.status+')');
+  const j=await r.json();if(!j.ok)throw new Error(j.error||'ระบบขัดข้อง');return j;
+}
+
+/* ---------- steps ---------- */
+function show(n){
+  [1,2,3,4].forEach(i=>{$('s'+i).hidden=i!==n});
+  document.querySelectorAll('#steps span').forEach(s=>{const k=+s.dataset.s;s.className=k===n?'on':(k<n?'done':'')});
+  W.step=n;saveW();
+}
+async function refreshQuota(){
+  if(!user)return;
+  try{const st=await api('status',{userId:user.userId});
+    if(!st.open){$('quota').textContent='ระบบปิดให้บริการชั่วคราว';$('readBtn').disabled=true;return}
+    $('quota').textContent='วันนี้ใช้ได้อีก '+toTh(st.leftToday)+' คดี';
+    if(!st.registered){show(1)}
+  }catch(e){$('quota').textContent=''}
+}
+
+/* ---------- step 1: register ---------- */
+if(user){['rName','rPhone','rLine','rEmail'].forEach((id,i)=>$(id).value=user[['name','phone','line','email'][i]]||'');$('rRole').value=user.role||$('rRole').value}
+$('regForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=$('rName').value.trim(),phone=$('rPhone').value.trim();
+  if(!name||!phone){$('regMsg').textContent='กรุณากรอกชื่อและเบอร์โทรศัพท์';return}
+  if(!$('rC1').checked||!$('rC2').checked){$('regMsg').textContent='กรุณาติ๊กยอมรับทั้ง 2 ข้อ';return}
+  const u={userId:(user&&user.userId)||uid(),name,phone,line:$('rLine').value.trim(),email:$('rEmail').value.trim(),role:$('rRole').value};
+  $('regBtn').disabled=true;$('regMsg').textContent='กำลังบันทึก…';
+  try{await api('register',Object.assign({consent:true},u));user=u;LS.set('answerUser',u);$('regMsg').textContent='';show(2);refreshQuota()}
+  catch(err){$('regMsg').textContent=err.message}
+  finally{$('regBtn').disabled=false}
+});
+
+/* ---------- step 2: files ---------- */
+const MAX_FILES=12,MAX_BYTES=14e6;
+const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+async function addFiles(list){
+  for(const f of list){
+    if(files.length>=MAX_FILES){toast('ใส่ได้สูงสุด 12 ไฟล์');break}
+    try{
+      if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
+        const buf=await f.arrayBuffer();files.push({name:f.name,mime:'application/pdf',data:b64(buf),size:buf.byteLength});
+      }else if(/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic)$/i.test(f.name)){
+        const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();
+        const sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+        c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        URL.revokeObjectURL(u);const url=c.toDataURL('image/jpeg',.85);
+        files.push({name:f.name,mime:'image/jpeg',data:url.split(',')[1],url,size:url.length*.75});
+      }else toast('รองรับเฉพาะภาพและ PDF: '+f.name);
+    }catch(e){toast('เปิดไฟล์ไม่ได้: '+f.name)}
+  }
+  drawThumbs();
+}
+function drawThumbs(){
+  const h=$('thumbs');h.innerHTML='';
+  files.forEach((f,i)=>{const d=document.createElement('div');d.className='th';
+    if(f.url){const im=document.createElement('img');im.src=f.url;im.alt='';d.append(im)}else d.textContent='📄 '+f.name;
+    const pg=document.createElement('span');pg.className='pg';pg.textContent=toTh(i+1);
+    const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','ลบไฟล์นี้');x.onclick=()=>{files.splice(i,1);drawThumbs()};
+    d.append(pg,x);h.append(d)});
+  const total=files.reduce((s,f)=>s+f.size,0);
+  $('readBtn').disabled=!files.length||total>MAX_BYTES;
+  if(total>MAX_BYTES)toast('ไฟล์รวมใหญ่เกินไป ลองลดจำนวนหน้า');
+}
+$('fileIn').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+const drop=$('drop');
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,()=>drop.classList.remove('over')));
+drop.addEventListener('drop',e=>{e.preventDefault();addFiles([...e.dataTransfer.files])});
+
+$('readBtn').onclick=async()=>{
+  $('err2').hidden=true;$('busy2').hidden=false;$('readBtn').disabled=true;
+  try{
+    const r=await api('extract',{userId:user.userId,files:files.map(f=>({mime:f.mime,data:f.data}))});
+    W={step:3,jobId:r.jobId,x:r.data};fillFromExtract(r.data);saveW();files=[];drawThumbs();show(3);window.scrollTo({top:$('s3').offsetTop-80});
+  }catch(e){$('err2').textContent=e.message;$('err2').hidden=false}
+  finally{$('busy2').hidden=true;$('readBtn').disabled=!files.length;refreshQuota()}
+};
+
+/* ---------- step 3: review ---------- */
+const OPTIONS=['ปฏิเสธว่าไม่ได้เป็นหนี้หรือไม่ได้ทำตามที่ฟ้อง','รับว่าเป็นหนี้จริง แต่ยอดเงินที่ฟ้องไม่ถูกต้อง','ดอกเบี้ย ค่าปรับ หรือค่าเสียหายสูงเกินกฎหมาย','คดีขาดอายุความ','ได้ชำระหนี้ไปแล้วบางส่วนหรือทั้งหมด','ลายมือชื่อในเอกสารไม่ใช่ของจำเลย','โจทก์ไม่มีอำนาจฟ้อง','ต้องการไกล่เกลี่ยหรือขอผ่อนชำระ','คดีอาญา: ให้การปฏิเสธ','คดีอาญา: ให้การรับสารภาพ'];
+OPTIONS.forEach((o,i)=>{const l=document.createElement('label');l.className='opt';l.innerHTML='<input type="checkbox" value="'+i+'"><span></span>';l.querySelector('span').textContent=o;$('opts').append(l)});
+const FIELDS=['fCourt','fBlack','fKind','fPlaintiff','fDefendants','dAge','dNat','dOcc','dHouse','dMoo','dRoad','dSoi','dSub','dDist','dProv','dPost','dTel'];
+function fillDef(d){d=d||{};const m={dAge:d.age,dNat:d.nationality,dOcc:d.occupation,dHouse:d.houseNo,dMoo:d.moo,dRoad:d.road,dSoi:d.soi,dSub:d.subdistrict,dDist:d.district,dProv:d.province,dPost:d.postcode,dTel:d.phone};Object.keys(m).forEach(k=>$(k).value=m[k]||'')}
+function fillFromExtract(x){
+  $('fCourt').value=x.court||'';$('fBlack').value=x.blackCaseNo||'';$('fKind').value=x.caseKind||'';
+  $('fPlaintiff').value=(x.plaintiffs||[]).join(', ');
+  const defs=x.defendants||[];$('fDefendants').value=defs.map(d=>d.name).filter(Boolean).join(', ');
+  const sel=$('fWho');sel.innerHTML='';defs.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(d.order?d.order+' ':'')+(d.name||'');sel.append(o)});
+  if(!defs.length){const o=document.createElement('option');o.value=-1;o.textContent='(ไม่พบชื่อจำเลย)';sel.append(o)}
+  fillDef(defs[0]);drawSummary(x);
+}
+$('fWho').onchange=()=>{const d=(W.x.defendants||[])[+$('fWho').value];fillDef(d);saveForm()};
+function drawSummary(x){
+  const s=$('summary');s.innerHTML='';
+  const add=(label,val)=>{if(!val||(Array.isArray(val)&&!val.length))return;const d=document.createElement('div');const b=document.createElement('b');b.textContent=label+' ';d.append(b);
+    if(Array.isArray(val)){const ol=document.createElement('ol');val.forEach(v=>{const li=document.createElement('li');li.textContent=v;ol.append(li)});d.append(ol)}else d.append(document.createTextNode(val));s.append(d)};
+  add('เรื่อง:',x.matter);add('ทุนทรัพย์:',x.amount);add('ข้อเท็จจริงตามคำฟ้อง',x.allegations);add('คำขอท้ายฟ้อง',x.relief);add('นัดศาล:',x.hearingDate);
+  s.hidden=!s.childElementCount;
+}
+function saveForm(){W.form={};FIELDS.concat(['facts']).forEach(k=>W.form[k]=$(k).value);W.who=$('fWho').value;W.opts=[...document.querySelectorAll('#opts input:checked')].map(i=>+i.value);saveW()}
+function loadForm(){if(!W.form)return;FIELDS.concat(['facts']).forEach(k=>{if(W.form[k]!=null)$(k).value=W.form[k]});if(W.who!=null)$('fWho').value=W.who;(W.opts||[]).forEach(i=>{const c=document.querySelector('#opts input[value="'+i+'"]');if(c)c.checked=true})}
+document.querySelector('#s3').addEventListener('input',saveForm);document.querySelector('#s3').addEventListener('change',saveForm);
+
+async function doDraft(){
+  saveForm();$('err3').hidden=true;$('busy3').hidden=false;$('draftBtn').disabled=true;$('redraft').disabled=true;
+  const x=Object.assign({},W.x,{court:$('fCourt').value,blackCaseNo:$('fBlack').value,caseKind:$('fKind').value,plaintiffs:[$('fPlaintiff').value]});
+  const whoSel=$('fWho').selectedOptions[0];
+  try{
+    const r=await api('draft',{userId:user.userId,jobId:W.jobId,extracted:x,defendantName:whoSel?whoSel.textContent:'',options:W.opts.map(i=>OPTIONS[i]),facts:$('facts').value});
+    W.body=r.body;W.checklist=r.checklist||[];saveW();drawDraft();show(4);window.scrollTo({top:$('s4').offsetTop-80});
+  }catch(e){$('err3').textContent=e.message;$('err3').hidden=false;if(W.step===4){show(3)}}
+  finally{$('busy3').hidden=true;$('draftBtn').disabled=false;$('redraft').disabled=false}
+}
+$('draftBtn').onclick=doDraft;
+$('redraft').onclick=()=>{show(3);doDraft()};
+
+/* ---------- step 4: edit & export ---------- */
+function drawDraft(){
+  $('body').value=W.body||'';
+  const ul=$('checklist');ul.innerHTML='';(W.checklist||[]).forEach(c=>{const li=document.createElement('li');li.textContent=c;ul.append(li)});
+  if(W.checklist&&W.checklist.length){const h=document.createElement('b');h.textContent='สิ่งที่ต้องตรวจหรือเติมก่อนยื่น';ul.prepend(h)}
+  ul.hidden=!(W.checklist&&W.checklist.length);
+}
+$('body').addEventListener('input',()=>{W.body=$('body').value;saveW()});
+$('copyBtn').onclick=async()=>{const t=$('body').value;try{await navigator.clipboard.writeText(t);toast('คัดลอกแล้ว')}catch(e){$('body').select();toast('กด Ctrl+C เพื่อคัดลอก')}};
+function restart(){W={};saveW();files=[];drawThumbs();['fCourt','fBlack','fKind','fPlaintiff','fDefendants','facts'].forEach(k=>$(k).value='');document.querySelectorAll('#opts input').forEach(c=>c.checked=false);show(2);refreshQuota();window.scrollTo(0,0)}
+$('restart3').onclick=restart;$('restart4').onclick=restart;
+
+/* position of each blank on แบบพิมพ์ (๑๑) in PDF points; L = y of the dotted line */
+const Y=L=>L-24.5;
+function splitBlack(s){s=toAr(s||'').replace(/\s+/g,'');const m=s.match(/^(.*?)\/(\d{2,4})$/);if(!m)return[s,''];return[m[1],m[2].slice(-2)]}
+$('toForm').onclick=()=>{
+  W.body=$('body').value;saveForm();
+  const th=$('thDigits').checked,T=s=>th?toTh(s):toAr(s);
+  const v=k=>T(($(k).value||'').trim());
+  const [num,yy]=splitBlack($('fBlack').value);
+  const who=$('fWho').selectedOptions[0];const whoName=who&&+who.value>=0?((W.x.defendants||[])[+who.value]||{}).name||'':'';
+  const F=(x,L,text)=>({p:0,x,y:Y(L),text});
+  const fields=[
+    F(416,105,T(num)),F(516,105,T(yy)),F(314,164,v('fCourt')),F(320,208,v('fKind')),
+    F(128,242,v('fPlaintiff')),F(128,308,v('fDefendants')),F(160,348,T(whoName)),
+    F(108,421,v('dNat')),F(288,421,v('dOcc')),
+    F(92,446,v('dAge')),F(186,446,v('dHouse')),F(382,446,v('dMoo')),F(431,446,v('dRoad')),
+    F(123,471,v('dSoi')),F(289,471,v('dSub')),F(452,471,v('dDist')),
+    F(104,496,v('dProv')),F(294,496,v('dPost')),F(440,496,v('dTel'))
+  ].filter(f=>f.text);
+  const body=T(W.body||'').replace(/^\s*ข้อ\s*[๑1]\s*\.?\s*/,'');
+  LS.set('pdfImport',{tpl:2,lp:33,fields,flow:{text:body,first:{p:0,x:73,y:Y(584),w:476,ind:102,lines:5},next:{x:73,y:Y(107),w:476,lines:19}},ts:Date.now()});
+  location.href='../pdf/?import=1';
+};
+
+/* ---------- boot ---------- */
+if(!user){show(1)}
+else if(W.step===4&&W.body){fillFromExtract(W.x||{});loadForm();drawDraft();show(4)}
+else if(W.step===3&&W.x){fillFromExtract(W.x);loadForm();show(3)}
+else show(2);
+refreshQuota();
+if(!API&&!MOCK){$('trial').textContent='ระบบยังไม่ได้เชื่อมต่อหลังบ้าน';$('trial').style.color='#8a1c12';$('trial').style.background='#fdecea'}
+
+/* ---------- demo responses (?mock=1) for testing the screens without the backend ---------- */
+function mock(action,p){return new Promise(res=>setTimeout(()=>{
+  if(action==='status')res({ok:true,open:true,registered:true,leftToday:3});
+  else if(action==='register')res({ok:true});
+  else if(action==='extract')res({ok:true,jobId:'demo',data:{court:'ศาลจังหวัดสมุทรปราการ',blackCaseNo:'ผบ.1234/2569',caseKind:'แพ่ง',matter:'ผิดสัญญากู้ยืมเงิน',amount:'85,000 บาท',plaintiffs:['บริษัท ตัวอย่าง ลิสซิ่ง จำกัด'],defendants:[{name:'นายตัวอย่าง ทดสอบ',order:'จำเลยที่ ๑',age:'45',nationality:'ไทย',occupation:'รับจ้าง',houseNo:'99/1',moo:'3',road:'สุขุมวิท',soi:'',subdistrict:'บางเมือง',district:'เมืองสมุทรปราการ',province:'สมุทรปราการ',postcode:'10270'}],allegations:['จำเลยทำสัญญากู้ยืมเงินกับโจทก์ 60,000 บาท เมื่อวันที่ 1 มีนาคม 2566','จำเลยผิดนัดชำระตั้งแต่งวดที่ 12','โจทก์บอกกล่าวทวงถามแล้ว จำเลยเพิกเฉย'],relief:['ให้จำเลยชำระเงิน 85,000 บาท พร้อมดอกเบี้ยร้อยละ 5 ต่อปี'],hearingDate:'15 ธันวาคม 2569'}});
+  else if(action==='draft')res({ok:true,body:'จำเลยขอปฏิเสธฟ้องของโจทก์ทั้งสิ้น เว้นแต่ที่จะให้การรับไว้โดยชัดแจ้งต่อไปนี้\nข้อ ๒. จำเลยรับว่าได้ทำสัญญากู้ยืมเงินกับโจทก์จริง เป็นเงิน ๖๐,๐๐๐ บาท แต่จำเลยได้ชำระหนี้ให้แก่โจทก์ไปแล้วรวม [ระบุจำนวนงวด] งวด เป็นเงินรวม [ระบุจำนวนเงิน] บาท ยอดหนี้ตามฟ้องจึงไม่ถูกต้อง\nข้อ ๓. ดอกเบี้ยและค่าปรับที่โจทก์คิดคำนวณสูงเกินกว่าที่กฎหมายกำหนด จำเลยไม่ต้องรับผิดในส่วนที่เกิน\nข้อ ๔. ด้วยเหตุดังกล่าวข้างต้น จำเลยจึงขอศาลได้โปรดพิพากษายกฟ้องโจทก์ และให้โจทก์เป็นผู้ชำระค่าฤชาธรรมเนียมและค่าทนายความแทนจำเลย',checklist:['เติมจำนวนงวดและจำนวนเงินที่ชำระแล้ว','แนบหลักฐานการโอนเงิน','ตรวจอัตราดอกเบี้ยตามสัญญา']});
+},action==='status'?50:900))}
+})();
+</script>
+</body>
+</html>

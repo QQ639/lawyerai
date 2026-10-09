@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>หลังบ้าน AI ทนายความ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<style>
+/* Layout: summary tiles, then settings, then two scrollable tables (users, jobs). */
+.page{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;width:100%}
+h1{margin:0 0 4px;font-size:26px;font-weight:600}
+.muted{color:var(--muted);font-size:14px}
+.login{max-width:380px;margin:60px auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px}
+input,select{font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;min-height:44px;background:#fff;color:var(--fg)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:18px 0}
+.tile2{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.tile2 b{display:block;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.3}
+.tile2 span{color:var(--muted);font-size:13px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:16px}
+.box h2{margin:0 0 10px;font-size:18px;font-weight:600}
+.set{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end}
+.set label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.set input[type=number]{width:120px}
+.switch{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg)!important;flex-direction:row!important}
+.switch input{width:22px;height:22px;min-height:0;accent-color:var(--ink)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:760px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+th{background:var(--bg);font-weight:600;position:sticky;top:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.bad{background:#fdecea;color:#8a1c12}.pill.mid{background:#fff4e5;color:#7a4300}
+.mini{font:inherit;font-size:13px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.err{color:#8a1c12;font-size:14px}
+.top{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<header class="site-head"><div class="wrap"><a class="logo" href="/"><span class="logo-mark">AI</span><span>aifree<small>.in.th</small></span></a></div></header>
+<main class="page">
+  <form class="login" id="login">
+    <h1>หลังบ้าน</h1>
+    <span class="muted">AI ช่วยพิมพ์คำให้การ · AI ร่างฟ้องกู้ยืมเงิน</span>
+    <input type="password" id="pw" placeholder="รหัสผ่าน" autocomplete="current-password">
+    <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
+    <span class="err" id="loginErr"></span>
+  </form>
+
+  <div id="dash" hidden>
+    <div class="top"><div><h1>หลังบ้าน · คำให้การ AI และร่างฟ้อง AI</h1><span class="muted" id="updated"></span></div>
+      <div style="display:flex;gap:8px"><button class="btn" id="reload">รีเฟรช</button><button class="btn" id="logout">ออกจากระบบ</button></div></div>
+    <div class="tiles" id="tiles"></div>
+
+    <div class="box"><h2>ตั้งค่าการให้บริการ</h2>
+      <div class="set">
+        <label class="switch"><input type="checkbox" id="sOpen"> เปิดให้บริการ</label>
+        <label>คดีต่อผู้ใช้ต่อวัน<input type="number" id="sUser" min="1"></label>
+        <label>คดีรวมต่อวัน<input type="number" id="sTotal" min="1"></label>
+        <button class="btn primary" id="saveSet">บันทึก</button>
+        <span class="muted" id="model"></span>
+      </div>
+    </div>
+
+    <div class="box"><h2>ผู้ใช้งาน <span class="muted" id="uCount"></span></h2>
+      <input id="uq" placeholder="ค้นหาชื่อ เบอร์ LINE อีเมล" style="width:100%;max-width:360px">
+      <div class="tbl"><table><thead><tr><th>ลงทะเบียน</th><th>ชื่อ</th><th>โทร</th><th>LINE</th><th>อีเมล</th><th>สถานะผู้ใช้</th><th>จำนวนคดี</th><th>ใช้ล่าสุด</th><th></th></tr></thead><tbody id="users"></tbody></table></div>
+    </div>
+
+    <div class="box"><h2>งานล่าสุด</h2>
+      <div class="tbl"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>ขั้นตอน</th><th>ศาล</th><th>ประเภท</th><th>เรื่อง</th><th>ไฟล์</th><th>token เข้า/ออก</th><th>ค่าใช้จ่าย (บาท)</th><th>วินาที</th><th>สถานะ</th></tr></thead><tbody id="jobs"></tbody></table></div>
+    </div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id),API=(window.ANSWER_API||'').trim();
+let pw='';try{pw=sessionStorage.getItem('ansAdmin')||''}catch(e){}
+let DATA=null;
+const fmt=d=>{if(!d)return'';const t=new Date(d);return isNaN(t)?'':t.toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})};
+const n=v=>(+v||0).toLocaleString('th-TH');
+async function call(op,extra){
+  if(!API)throw new Error('ยังไม่ได้ใส่ URL ระบบหลังบ้านใน config.js');
+  const r=await fetch(API,{method:'POST',body:JSON.stringify(Object.assign({action:'admin',password:pw,op},extra||{}))});
+  const j=await r.json();if(!j.ok)throw new Error(j.error||'ผิดพลาด');return j;
+}
+async function load(op,extra){
+  try{DATA=await call(op||'stats',extra);$('login').hidden=true;$('dash').hidden=false;try{sessionStorage.setItem('ansAdmin',pw)}catch(e){}draw()}
+  catch(e){$('loginErr').textContent=e.message;$('login').hidden=false;$('dash').hidden=true}
+}
+function cell(tr,v,cls){const td=document.createElement('td');if(cls)td.className=cls;if(v instanceof Node)td.append(v);else td.textContent=v==null?'':v;tr.append(td);return td}
+function pill(t,c){const s=document.createElement('span');s.className='pill '+c;s.textContent=t;return s}
+function draw(){
+  const s=DATA.stats,st=DATA.settings;$('updated').textContent='ข้อมูล ณ '+fmt(new Date());
+  const T=[['ผู้ใช้ทั้งหมด',n(s.users)],['ผู้ใช้ใหม่วันนี้',n(s.usersToday)],['คดีทั้งหมด',n(s.cases)],['คดีวันนี้',n(s.casesToday)],['ร่างคำให้การสำเร็จ',n(s.drafts)],['ผิดพลาด',n(s.errors)],['ค่า AI เดือนนี้ (บาท)',n(s.costMonth)],['ค่า AI รวม (บาท)',n(s.costAll)]];
+  $('tiles').innerHTML='';T.forEach(([l,v])=>{const d=document.createElement('div');d.className='tile2';const b=document.createElement('b');b.textContent=v;const sp=document.createElement('span');sp.textContent=l;d.append(b,sp);$('tiles').append(d)});
+  $('sOpen').checked=st.SERVICE_OPEN;$('sUser').value=st.LIMIT_USER_DAY;$('sTotal').value=st.LIMIT_TOTAL_DAY;$('model').textContent='โมเดล: '+st.MODEL;
+  drawUsers();
+  const jb=$('jobs');jb.innerHTML='';
+  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านสัญญา',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
+    cell(tr,n(j.tokensIn)+' / '+n(j.tokensOut),'num');cell(tr,j.costTHB,'num');cell(tr,((+j.ms||0)/1000).toFixed(1),'num');
+    cell(tr,pill(j.status==='ok'?'สำเร็จ':j.status==='unreadable'?'อ่านไม่ออก':'ผิดพลาด',j.status==='ok'?'ok':j.status==='unreadable'?'mid':'bad')).title=j.error||'';jb.append(tr)});
+}
+function drawUsers(){
+  const q=$('uq').value.trim().toLowerCase(),ub=$('users');ub.innerHTML='';
+  const list=DATA.users.filter(u=>!q||[u.name,u.phone,u.line,u.email].join(' ').toLowerCase().includes(q));
+  $('uCount').textContent='('+n(list.length)+')';
+  list.forEach(u=>{const tr=document.createElement('tr');cell(tr,fmt(u.createdAt));cell(tr,u.name);cell(tr,u.phone);cell(tr,u.line);cell(tr,u.email);cell(tr,u.role);cell(tr,n(u.jobs),'num');cell(tr,fmt(u.lastUsedAt));
+    const blocked=u.blocked===true||u.blocked==='TRUE';const b=document.createElement('button');b.className='mini';b.textContent=blocked?'ปลดระงับ':'ระงับ';
+    b.onclick=()=>load('block',{userId:u.userId,blocked:!blocked});const td=cell(tr,'');if(blocked)td.append(pill('ถูกระงับ','bad'),' ');td.append(b);ub.append(tr)});
+}
+$('uq').addEventListener('input',()=>DATA&&drawUsers());
+$('login').addEventListener('submit',e=>{e.preventDefault();pw=$('pw').value;$('loginErr').textContent='กำลังเข้าสู่ระบบ…';load()});
+$('reload').onclick=()=>load();
+$('logout').onclick=()=>{pw='';try{sessionStorage.removeItem('ansAdmin')}catch(e){}$('dash').hidden=true;$('login').hidden=false;$('pw').value='';$('loginErr').textContent=''};
+$('saveSet').onclick=()=>load('settings',{settings:{SERVICE_OPEN:$('sOpen').checked,LIMIT_USER_DAY:+$('sUser').value,LIMIT_TOTAL_DAY:+$('sTotal').value}});
+if(pw)load();
+})();
+</script>
+</body>
+</html>
