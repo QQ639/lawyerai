@@ -261,7 +261,7 @@ const FORMS=[{"id": "f7", "title": "คำร้อง/คำแถลง/คำ
 <script>
 (function(){
 const $=id=>document.getElementById(id);
-const S={bytes:null,name:'',pdf:null,sizes:[],scale:1,boxes:[],sel:null,size:16,color:'#1d3a9e',font:'TH Sarabun New',bold:false,lp:null,th:false,stamp:null,nid:1,zoom:1};
+const S={bytes:null,name:'',pdf:null,sizes:[],scale:1,boxes:[],sel:null,size:18,color:'#1d3a9e',font:'TH Sarabun New',bold:false,lp:null,th:false,stamp:null,nid:1,zoom:1};
 let vpm=document.querySelector('meta[name=viewport]');if(!vpm){vpm=document.createElement('meta');vpm.name='viewport';document.head.append(vpm)}
 vpm.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'); // lock browser zoom: the app zooms the pages itself
 ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false})); // iOS Safari ignores user-scalable=no
@@ -719,7 +719,7 @@ async function importJob(j){
   const f=FORMS[j.tpl];if(!f)return;
   if(!f.data){toast('ยังไม่มีแบบพิมพ์ '+f.title+' ฉบับใหม่ในระบบ');return}
   await fontsReady();
-  const st={size:S.size,font:S.font,bold:false,lp:j.lp||33,color:S.color};
+  const st={size:j.size||S.size,font:S.font,bold:false,lp:j.lp||33,color:S.color};
   let chunks=[],bytes=b64(f.data),tpl=j.tpl;
   if(j.flow&&j.flow.text){
     const em=' '.repeat(Math.round(72/(st.size*fs(st)))); // paragraph indent ≈ 1 inch

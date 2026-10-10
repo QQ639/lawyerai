@@ -50,3 +50,9 @@
 2. Deploy → จัดการการทำให้ใช้งานได้ → ✏️ → เวอร์ชันใหม่ → Deploy (URL เดิม)
 3. อัปโหลดโฟลเดอร์ `complaint/`, ไฟล์ `apps.js` และ `answer/admin.html` ขึ้น GitHub
 4. ราคา Sonnet 5.5 ปัจจุบันคือ $2 / $10 ต่อล้าน token แก้ PRICE_IN_MTOK = 2 และ PRICE_OUT_MTOK = 10 ใน Script Properties ให้ค่าใช้จ่ายในหลังบ้านตรง
+
+## อัปเดตเพื่อเปิดแอปร่างฟ้องคดีอาญา
+1. วางโค้ด `Code.gs` ฉบับใหม่ทับใน Apps Script → บันทึก
+2. Deploy → จัดการการทำให้ใช้งานได้ → ✏️ → เวอร์ชันใหม่ → Deploy (URL เดิม)
+3. อัปโหลด `complaint/` (รวม `forms/f6.pdf` และ `forms/f19.pdf`), `criminal/index.html` และ `apps.js` ขึ้น GitHub
+4. แอปคดีอาญาอยู่ที่ https://lawyerthaiai.com/criminal/ (ใช้หน้าเดียวกับ `/complaint/?kind=criminal` ข้อมูลที่กรอกแยกจากคดีแพ่ง)

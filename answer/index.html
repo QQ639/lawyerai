@@ -357,7 +357,7 @@ $('toForm').onclick=()=>{
     F(104,496,v('dProv')),F(294,496,v('dPost')),F(440,496,v('dTel'))
   ].filter(f=>f.text);
   const body=T(W.body||'').replace(/^\s*ข้อ\s*[๑1]\s*\.?\s*/,'');
-  LS.set('pdfImport',{tpl:2,lp:33,fields,flow:{text:body,first:{p:0,x:73,y:Y(584),w:476,ind:102,lines:5},next:{x:73,y:Y(107),w:476,lines:19}},ts:Date.now()});
+  LS.set('pdfImport',{tpl:2,lp:33,size:18,fields,flow:{text:body,first:{p:0,x:73,y:Y(584),w:476,ind:102,lines:5},next:{x:73,y:Y(107),w:476,lines:19}},ts:Date.now()});
   location.href='../pdf/?import=1';
 };
 
