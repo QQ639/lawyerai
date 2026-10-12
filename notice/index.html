@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI ร่างหนังสือบอกกล่าวและสัญญา</title>
+<meta name="description" content="AI อ่านเอกสาร ตรวจข้อมูล แล้วร่างหนังสือบอกกล่าวบังคับจำนอง ทวงถามเงินกู้และผู้ค้ำประกัน ทวงถามค่าแชร์ สัญญากู้ยืมเงิน สัญญาค้ำประกัน และสัญญายืมทรัพย์ พร้อมข้อควรระวัง">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&family=Sarabun:wght@300;400;600&display=swap">
+<link rel="stylesheet" href="../style.css">
+<style>
+/* Layout: narrow column of numbered steps; the result step shows A4 sheets (the document) beside a checklist of precautions. */
+.page{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;width:100%}
+.narrow{max-width:860px;margin:0 auto}
+.back{display:inline-block;color:var(--ink);text-decoration:none;font-size:15px;font-weight:500;margin-bottom:10px}
+.title{margin:0;font-family:var(--display);font-size:clamp(26px,4.6vw,36px);line-height:1.3;font-weight:700;text-wrap:balance}
+.sub{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:66ch}
+.warn{margin:18px 0 0;padding:14px 16px;border-radius:12px;background:#fff8e6;border:1px solid #f1d89a;color:#5c4300;font-size:15px;line-height:1.6}
+.warn b{color:#4a3600}
+.trial{display:inline-block;margin-top:14px;font-size:13px;font-weight:600;color:var(--ok);background:var(--ok-soft);padding:4px 12px;border-radius:999px}
+.steps{display:flex;gap:6px;margin:26px 0 14px;flex-wrap:wrap}
+.steps span{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+.steps span.on{border-color:var(--ink);background:var(--ink-soft);color:var(--ink);font-weight:600}
+.steps span.done{color:var(--ok);border-color:#bfe3cd;background:var(--ok-soft)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-top:14px}
+.panel h2{margin:0 0 4px;font-size:20px;font-weight:600}
+.panel .hint{margin:0 0 16px;color:var(--muted);font-size:15px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);min-width:0}
+label.f input,label.f select,label.f textarea{font:inherit;font-size:16px;color:var(--fg);background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%;min-height:46px}
+label.f textarea{min-height:80px;resize:vertical;line-height:1.6}
+label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.req{color:#b42318}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.55;padding:8px 0}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.ghost{background:transparent}
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.type{display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;color:var(--fg)}
+.type:hover{border-color:var(--ink)}
+.type[aria-pressed="true"]{border-color:var(--ink);background:var(--ink-soft);box-shadow:inset 0 0 0 1px var(--ink)}
+.type b{font-size:16px;font-weight:600}
+.type span{font-size:14px;color:var(--muted);line-height:1.5}
+.type i{font-style:normal;font-size:12px;font-weight:600;color:var(--ink)}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px;background:#fbfcfe}
+.card h3{margin:0 0 12px;font-size:17px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card h3 .rm{margin-left:auto;font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 12px;min-height:36px;cursor:pointer}
+.add{font:inherit;font-size:15px;font-weight:600;color:var(--ink);background:var(--ink-soft);border:1px dashed var(--ink);border-radius:10px;min-height:44px;padding:8px 14px;cursor:pointer;margin-top:10px}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.seg label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;cursor:pointer;font-size:15px}
+.seg label:has(input:checked){border-color:var(--ink);background:var(--ink-soft);color:var(--ink)}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:20px 16px;text-align:center;background:#fbfcfe;display:flex;flex-direction:column;gap:8px;align-items:center}
+.drop b{font-size:16px}.drop span{color:var(--muted);font-size:14px}
+.file-btn{position:relative;overflow:hidden}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.files{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.files span{display:inline-flex;gap:6px;align-items:center;font-size:14px;border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px;background:#fff}
+.files button{border:0;background:var(--bg);border-radius:50%;width:28px;height:28px;cursor:pointer}
+.busy{display:flex;gap:12px;align-items:center;padding:16px;border-radius:12px;background:var(--ink-soft);color:var(--ink);font-weight:500;margin-top:16px}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(31,69,181,.25);border-top-color:var(--ink);animation:sp .9s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.err{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fdecea;border:1px solid #f5c2bd;color:#8a1c12;font-size:15px}
+.box{padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:15px;margin-top:12px}
+.box h3{margin:0 0 6px;font-size:15px;font-weight:600}
+.box ul{margin:0;padding-left:22px}.box li{margin:3px 0}
+.box.issue{background:#fff8e6;border-color:#f1d89a}
+.q{display:flex;flex-direction:column;gap:6px;margin-top:12px;font-size:15px}
+.q textarea{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-height:60px;resize:vertical}
+.status{font-size:14px;color:var(--muted)}
+/* result */
+.result{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;margin-top:16px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tab{font:inherit;font-size:14px;font-weight:600;min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--ink);background:var(--ink-soft);color:var(--ink)}
+.viewer{background:#e9edf3;border-radius:12px;padding:18px;overflow:auto}
+.caution{position:sticky;top:80px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;font-size:14.5px;line-height:1.55}
+.caution h3{margin:0 0 4px;font-size:16px}
+.caution label{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-top:1px solid var(--line)}
+.caution label:first-of-type{border-top:0}
+.caution input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--ok)}
+.caution small{display:block;color:var(--muted);margin:8px 0 2px;font-weight:600}
+/* ---------- the document (A4) ---------- */
+/*DOC*/
+.sheet{width:210mm;min-height:297mm;margin:0 auto 18px;background:#fff;box-shadow:0 2px 14px rgba(23,32,46,.16);padding:25mm 20mm 20mm 30mm;
+  font-family:"Sarabun","TH SarabunPSK",sans-serif;font-weight:300;font-size:11pt;line-height:1.62;color:#000;outline:none}
+.sheet[contenteditable="true"]:focus{box-shadow:0 0 0 2px var(--ink),0 2px 14px rgba(23,32,46,.16)}
+.sheet p{margin:0}
+.sheet .from{margin-left:52%;}
+.sheet .date{margin:14pt 0 14pt 40%}
+.sheet .kv{display:grid;grid-template-columns:auto 1fr;column-gap:10pt}
+.sheet .kv .k{white-space:nowrap}
+.sheet .kv ol{margin:0;padding-left:16pt}
+.sheet .para{text-indent:2.5cm;margin-top:8pt}
+.sheet .gap{height:10pt}
+.sheet .sign{margin:22pt 0 0 45%;text-align:center}
+.sheet .sign .sp{height:30pt}
+.sheet .contact{margin-top:26pt;font-size:10pt}
+.sheet h1{font-family:inherit;font-size:13pt;font-weight:600;text-align:center;margin:0 0 10pt}
+.sheet .place{text-align:right}
+.sheet .clause{text-indent:2.5cm;margin-top:6pt}
+.sheet .sigs{display:grid;grid-template-columns:1fr 1fr;gap:26pt 20pt;margin-top:30pt;text-align:center}
+.sheet .sigs .one{break-inside:avoid}
+.sheet b{font-weight:600}
+/*/DOC*/
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+@media (max-width:900px){.result{grid-template-columns:1fr}.caution{position:static}}
+@media (max-width:640px){.grid2,.grid3{grid-template-columns:1fr}.panel{padding:18px 14px}.card{padding:14px 12px}.viewer{padding:8px}}
+</style>
+</head>
+<body>
+<header class="site-head"><div class="wrap"><a class="logo" href="/"><span class="logo-mark">AI</span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a></div></header>
+
+<main class="page">
+ <div class="narrow">
+  <a class="back" href="/">← เครื่องมือทั้งหมด</a>
+  <h1 class="title">AI ร่างหนังสือบอกกล่าวและสัญญา</h1>
+  <p class="sub">อัปโหลดสัญญาหรือหลักฐาน กรอกข้อมูลเท่าที่มี AI จะอ่าน ตรวจความครบถ้วน ถามสิ่งที่ขาด แล้วร่างเอกสารที่จัดหน้าพร้อมพิมพ์ พร้อมรายการข้อควรระวังเพื่อเก็บหลักฐานไว้ใช้ฟ้องคดี</p>
+  <div class="warn" role="note"><b>เอกสารที่ได้เป็นร่างที่ AI ช่วยพิมพ์ ผู้ใช้ต้องตรวจข้อเท็จจริง ตัวเลข ชื่อ และที่อยู่ก่อนใช้ทุกครั้ง</b> ไม่ใช่คำแนะนำทางกฎหมาย หากมีข้อสงสัยควรปรึกษาทนายความ</div>
+  <span class="trial" id="trial">ช่วงทดลองใช้</span>
+  <div class="steps" id="steps"><span data-s="1">๑ ลงทะเบียน</span><span data-s="2">๒ เลือกเอกสาร</span><span data-s="3">๓ กรอกข้อมูล</span><span data-s="4">๔ ผลการตรวจ</span><span data-s="5">๕ เอกสาร</span></div>
+
+  <!-- step 1 -->
+  <section class="panel" id="s1" hidden>
+    <h2>ลงทะเบียนใช้งาน</h2>
+    <p class="hint">กรอกครั้งเดียว ระบบจำไว้ในเครื่องนี้ ใช้ร่วมกับเครื่องมืออื่นในเว็บนี้</p>
+    <form id="regForm" class="grid2" novalidate>
+      <label class="f">ชื่อ-นามสกุล <span class="req">*</span><input id="rName" autocomplete="name" required></label>
+      <label class="f">เบอร์โทรศัพท์ <span class="req">*</span><input id="rPhone" inputmode="tel" autocomplete="tel" required></label>
+      <label class="f">LINE ID<input id="rLine"></label>
+      <label class="f">อีเมล<input id="rEmail" type="email" autocomplete="email"></label>
+      <label class="f full">คุณคือ<select id="rRole"><option>ทนายความ</option><option>ผู้ช่วยทนายความ / เสมียนทนาย</option><option>เจ้าหนี้ (ใช้เอง)</option><option>นักศึกษากฎหมาย</option><option>อื่น ๆ</option></select></label>
+      <div class="full">
+        <label class="check"><input type="checkbox" id="rC1"><span>ฉันเข้าใจว่าเอกสารที่ได้เป็น<b>ร่าง</b>ที่ AI ช่วยพิมพ์ อาจยังไม่สมบูรณ์ ต้องตรวจแก้ก่อนใช้ และไม่ใช่คำแนะนำทางกฎหมาย</span></label>
+        <label class="check"><input type="checkbox" id="rC2"><span>ฉันยินยอมให้เก็บชื่อและช่องทางติดต่อข้างต้นเพื่อบันทึกการใช้งาน และยินยอมให้ส่งข้อมูลและเอกสารที่อัปโหลดไปให้ AI ประมวลผล ระบบ<b>ไม่เก็บ</b>ไฟล์ ชื่อคู่กรณี หรือข้อความที่ร่าง</span></label>
+      </div>
+      <div class="full row" style="margin-top:4px"><button class="btn primary" type="submit" id="regBtn">เริ่มใช้งาน</button><span class="status" id="regMsg"></span></div>
+    </form>
+  </section>
+
+  <!-- step 2 -->
+  <section class="panel" id="s2" hidden>
+    <h2>เลือกเอกสารที่ต้องการ</h2>
+    <p class="hint">เลือก ๑ ประเภท แล้วกดถัดไป</p>
+    <div class="types" id="types"></div>
+    <div class="row"><button class="btn primary" id="toForm" disabled>ถัดไป</button><span class="status" id="quota"></span></div>
+  </section>
+
+  <!-- step 3 -->
+  <section class="panel" id="s3" hidden>
+    <h2 id="s3title">กรอกข้อมูล</h2>
+    <p class="hint">กรอกเท่าที่มี ช่องที่ว่าง AI จะหาจากเอกสารที่อัปโหลด หรือถามเพิ่มในขั้นถัดไป</p>
+    <div class="card">
+      <h3>เอกสารประกอบ (ถ้ามี)</h3>
+      <div class="drop"><b>สัญญา โฉนด สลิปโอนเงิน แชตทวงถาม ฯลฯ</b><span>ภาพ JPG / PNG หรือ PDF สูงสุด ๑๐ ไฟล์</span>
+        <span class="btn file-btn">เลือกไฟล์ / ถ่ายภาพ<input id="fileIn" type="file" accept="image/*,application/pdf" multiple></span></div>
+      <div class="files" id="files"></div>
+    </div>
+    <div id="parties"></div>
+    <div class="card"><h3>รายละเอียด</h3><div class="grid2" id="fields"></div></div>
+    <div class="card" id="senderCard">
+      <h3>ผู้ส่งหนังสือ</h3>
+      <div class="seg"><label><input type="radio" name="sender" value="lawyer" checked> ทนายความผู้รับมอบอำนาจ</label><label><input type="radio" name="sender" value="self"> เจ้าหนี้ส่งเอง</label></div>
+      <div class="grid2" id="lawyerBox">
+        <label class="f">ชื่อทนายความ<input id="lName" placeholder="เช่น นายทนาย ตัวอย่างความ"></label>
+        <label class="f">ใบอนุญาตทนายความเลขที่<input id="lLic"></label>
+        <label class="f">ชื่อสำนักงาน<input id="lOffice" placeholder="เช่น สำนักงานกฎหมาย …"></label>
+        <label class="f">โทรศัพท์<input id="lTel" inputmode="tel"></label>
+        <label class="f full">ที่อยู่สำนักงาน<textarea id="lAddr" rows="2"></textarea></label>
+      </div>
+      <div class="grid2" style="margin-top:12px"><label class="f">วันที่ในหนังสือ<input id="docDate" type="date"></label></div>
+    </div>
+    <div class="row"><button class="btn primary" id="checkBtn">ให้ AI อ่านและตรวจข้อมูล</button><button class="btn ghost" id="back2">เปลี่ยนประเภท</button></div>
+    <div class="busy" id="busy3" hidden><span class="spin"></span><span>AI กำลังอ่านเอกสารและตรวจข้อมูล ประมาณ ๒๐–๖๐ วินาที</span></div>
+    <div class="err" id="err3" hidden></div>
+  </section>
+
+  <!-- step 4 -->
+  <section class="panel" id="s4" hidden>
+    <h2>ผลการตรวจ</h2>
+    <p class="hint">ตรวจสิ่งที่ AI อ่านได้ ตอบคำถามที่ยังขาด แล้วกดร่างเอกสาร</p>
+    <div class="box" id="factsBox"><h3>ข้อมูลที่อ่านได้จากเอกสาร</h3><ul id="facts"></ul></div>
+    <div class="box issue" id="issuesBox"><h3>สิ่งที่ต้องระวัง</h3><ul id="issues"></ul></div>
+    <div id="qs"></div>
+    <div class="row"><button class="btn primary" id="draftBtn">ร่างเอกสาร</button><button class="btn ghost" id="back3">กลับไปแก้ข้อมูล</button></div>
+    <div class="busy" id="busy4" hidden><span class="spin"></span><span>AI กำลังร่างเอกสาร ประมาณ ๓๐–๙๐ วินาที</span></div>
+    <div class="err" id="err4" hidden></div>
+  </section>
+ </div>
+
+  <!-- step 5 -->
+  <section class="panel" id="s5" hidden>
+    <h2>เอกสารพร้อมพิมพ์</h2>
+    <p class="hint">คลิกบนกระดาษเพื่อแก้ข้อความได้โดยตรง แล้วพิมพ์ บันทึกเป็น PDF หรือดาวน์โหลดเป็นไฟล์ Word</p>
+    <div class="row" style="margin-top:0">
+      <button class="btn primary" id="printBtn">พิมพ์ / บันทึก PDF</button>
+      <button class="btn" id="wordBtn">ดาวน์โหลด Word</button>
+      <button class="btn ghost" id="redraft">ให้ AI ร่างใหม่</button>
+      <button class="btn ghost" id="back4">กลับไปแก้ข้อมูล</button>
+      <button class="btn ghost" id="restart">เริ่มงานใหม่</button>
+    </div>
+    <div class="result">
+      <div><div class="tabs" id="tabs" role="tablist"></div><div class="viewer"><div id="printArea"></div></div></div>
+      <aside class="caution" id="caution"></aside>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot"><div class="wrap"><span>© <span id="yr"></span> Q-Q สงวนลิขสิทธิ์ · ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com</span><span>เอกสารที่ได้เป็นร่าง ผู้ใช้ต้องตรวจความถูกต้องเอง และห้ามใช้ปลอมแปลงเอกสาร</span></div></footer>
+<div class="toast" id="toast" hidden></div>
+
+<script src="../answer/config.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const API=(window.ANSWER_API||'').trim();
+$('yr').textContent=new Date().getFullYear()+543;
+let toastT;const toast=t=>{const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,3000)};
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const TH='๐๑๒๓๔๕๖๗๘๙',toTh=s=>String(s==null?'':s).replace(/[0-9]/g,d=>TH[d]);
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const thDate=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?toTh((+m[3])+' '+MONTHS[m[2]-1]+' พ.ศ. '+(+m[1]+543)):''};
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+/* tidy AI text: Thai digits, drop stray characters the model sometimes emits */
+const tidy=s=>toTh(String(s==null?'':s)).replace(/[๜-๿]/g,'').replace(/(?<=[฀-๛])[A-Za-z]{1,3}(?=[฀-๛])/g,'').replace(/\s+/g,' ').trim();
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- document types ---------- */
+const P=(key,label,min,many)=>({key,label,min,many});
+const F=(key,label,type,def,full)=>({key,label,type:type||'text',def,full});
+const TYPES={
+  mortgage:{name:'บอกกล่าวบังคับจำนอง',kind:'letter',desc:'ถึงลูกหนี้ และผู้จำนองที่เป็นบุคคลอื่น ให้ชำระหนี้ภายในไม่น้อยกว่า ๖๐ วัน ก่อนฟ้องบังคับจำนอง',
+    parties:[P('creditor','ผู้รับจำนอง (เจ้าหนี้)',1),P('debtor','ลูกหนี้',1,true),P('mortgagor','ผู้จำนอง (กรณีไม่ใช่ลูกหนี้)',0,true)],
+    fields:[F('contractDate','วันที่จดทะเบียนจำนอง','date'),F('limit','วงเงินจำนอง (บาท)'),F('property','ทรัพย์ที่จำนอง เช่น โฉนดที่ดินเลขที่ … เลขที่ดิน … ตำบล … อำเภอ … จังหวัด …','textarea',null,1),
+      F('debt','ยอดหนี้ค้างชำระ (บาท)'),F('interest','ดอกเบี้ย (ร้อยละต่อปี)'),F('payment','วิธีชำระ เช่น โอนเข้าบัญชี … หรือชำระที่สำนักงาน','text',null,1),F('days','ให้ชำระภายใน (วัน นับแต่ได้รับหนังสือ)','number','60'),F('details','รายละเอียดเพิ่มเติม','textarea',null,1)]},
+  loan:{name:'บอกกล่าวทวงถามเงินกู้ / ผู้ค้ำประกัน',kind:'letter',desc:'แยกฉบับถึงผู้กู้ และผู้ค้ำประกันแต่ละคน (ผู้ค้ำต้องบอกกล่าวภายใน ๖๐ วันนับแต่ลูกหนี้ผิดนัด)',
+    parties:[P('creditor','ผู้ให้กู้ (เจ้าหนี้)',1),P('debtor','ผู้กู้',1,true),P('guarantor','ผู้ค้ำประกัน',0,true)],
+    fields:[F('contractDate','วันที่ทำสัญญากู้','date'),F('principal','เงินต้น (บาท)'),F('interest','ดอกเบี้ย (ร้อยละต่อปี)'),F('dueDate','วันครบกำหนดชำระ / วันที่ผิดนัด','date'),
+      F('debt','ยอดหนี้ค้างชำระ (บาท)'),F('payment','วิธีชำระ เช่น โอนเข้าบัญชี …','text'),F('days','ให้ชำระภายใน (วัน นับแต่ได้รับหนังสือ)','number','15'),F('details','รายละเอียดเพิ่มเติม เช่น ชำระมาแล้วบางส่วน ทวงถามด้วยวาจาแล้ว','textarea',null,1)]},
+  share:{name:'บอกกล่าวทวงถามค่าแชร์',kind:'letter',desc:'ลูกแชร์ทวงนายวงแชร์ หรือนายวงแชร์ทวงลูกแชร์ที่ประมูลไปแล้วไม่ส่งค่าแชร์',
+    parties:[P('creditor','ผู้ทวงถาม (เจ้าหนี้)',1),P('debtor','ผู้ถูกทวงถาม (ลูกหนี้)',1,true)],
+    fields:[F('role','ฐานะ เช่น เจ้าหนี้เป็นลูกแชร์ ลูกหนี้เป็นนายวงแชร์','text',null,1),F('circle','รายละเอียดวงแชร์ เช่น มือละ … บาท จำนวน … มือ เริ่ม … สิ้นสุด … วิธีเปีย','textarea',null,1),
+      F('contractDate','วันที่เริ่มวง / วันที่ทำข้อตกลง','date'),F('debt','ยอดเงินที่ทวงถาม (บาท)'),F('payment','วิธีชำระ','text'),F('days','ให้ชำระภายใน (วัน)','number','7'),F('details','รายละเอียดเพิ่มเติม','textarea',null,1)]},
+  loanContract:{name:'สัญญากู้ยืมเงิน และ/หรือ ค้ำประกัน',kind:'contract',desc:'ร่างสัญญากู้ยืมเงิน ถ้ามีผู้ค้ำประกันจะแยกเป็นสัญญาค้ำประกันอีกฉบับ',
+    parties:[P('lender','ผู้ให้กู้',1),P('borrower','ผู้กู้',1,true),P('guarantor','ผู้ค้ำประกัน',0,true)],
+    fields:[F('place','สถานที่ทำสัญญา'),F('date','วันที่ทำสัญญา','date'),F('principal','จำนวนเงินกู้ (บาท)'),F('interest','ดอกเบี้ย (ร้อยละต่อปี ไม่เกิน ๑๕)'),
+      F('delivery','วิธีรับเงิน เช่น โอนเข้าบัญชีผู้กู้ … / รับเงินสด','text',null,1),F('repay','การชำระคืน เช่น ผ่อน ๑๐ งวด งวดละ … ทุกวันที่ … เริ่ม …','textarea',null,1),
+      F('collateral','หลักประกันอื่น (ถ้ามี)','text',null,1),F('details','ข้อตกลงอื่น','textarea',null,1)]},
+  lendContract:{name:'สัญญายืมทรัพย์อื่น ๆ',kind:'contract',ask:true,desc:'ยืมรถ ยืมเครื่องมือ ยืมทองคำ ฯลฯ AI จะถามรายละเอียดก่อนร่างทุกครั้ง',
+    parties:[P('lender','ผู้ให้ยืม',1),P('borrower','ผู้ยืม',1,true),P('guarantor','ผู้ค้ำประกัน (ถ้ามี)',0,true)],
+    fields:[F('place','สถานที่ทำสัญญา'),F('date','วันที่ทำสัญญา','date'),F('item','ทรัพย์ที่ยืม (ชนิด ยี่ห้อ รุ่น หมายเลข สภาพ มูลค่า)','textarea',null,1),
+      F('returnDate','กำหนดส่งคืน','date'),F('details','ข้อตกลงอื่น','textarea',null,1)]}
+};
+const PF=[['name','ชื่อ-นามสกุล / ชื่อนิติบุคคล'],['idCard','เลขประจำตัวประชาชน'],['phone','โทรศัพท์'],['addr','ที่อยู่ (ตามทะเบียนบ้าน หรือที่ติดต่อได้)','full']];
+
+/* ---------- precautions (checked before sending / signing; kept as evidence for court) ---------- */
+const SEND=['ส่งทางไปรษณีย์<b>ลงทะเบียนตอบรับ (EMS/AR)</b> ไปยังภูมิลำเนาตามทะเบียนบ้านของผู้รับทุกคน และที่อยู่ที่ติดต่อได้จริง (ถ้าต่างกัน ส่งทั้งสองแห่ง)',
+  'ถ่ายรูปหนังสือทุกหน้า เอกสารที่แนบ และซองจดหมายที่จ่าหน้าแล้ว ก่อนปิดซอง เพื่อพิสูจน์ว่าส่งอะไรไปบ้าง',
+  'เก็บใบรับฝาก ใบตอบรับ (ใบเหลือง) และพิมพ์ผลติดตามพัสดุจากเว็บไปรษณีย์ไทย ไว้กับสำนวน',
+  'ถ้าหนังสือถูกตีกลับ (ไม่มีผู้รับ ย้ายที่อยู่ ไม่ยอมรับ) เก็บซองไว้ทั้งซอง ห้ามแกะ และตรวจที่อยู่ใหม่จากทะเบียนราษฎร',
+  'ทำสำเนาหนังสือเก็บไว้ ๑ ชุด ลงลายมือชื่อจริงทุกฉบับ ถ้าส่งในนามทนายความ ให้แนบสำเนาหนังสือมอบอำนาจ'];
+const CAUT={
+  mortgage:[['ก่อนส่ง',['กำหนดเวลาชำระต้อง<b>ไม่น้อยกว่า ๖๐ วัน</b>นับแต่วันที่ลูกหนี้ได้รับหนังสือ (ป.พ.พ. มาตรา ๗๒๘) ถ้าน้อยกว่านี้ ฟ้องบังคับจำนองไม่ได้',
+      'ถ้าผู้จำนองเป็นบุคคลอื่น (ไม่ใช่ลูกหนี้) ต้องส่งหนังสือแจ้งผู้จำนอง<b>ภายใน ๑๕ วัน</b>นับแต่วันที่ส่งหนังสือถึงลูกหนี้ (มาตรา ๗๓๕)',
+      'ตรวจรายการจดทะเบียนจำนองหลังโฉนด (ชื่อผู้จำนอง วงเงิน วันที่จด) ให้ตรงกับหนังสือ และขอคัดสำเนารับรองจากสำนักงานที่ดิน',
+      'แนบสำเนาสัญญาจำนอง สำเนาโฉนด และหนังสือมอบอำนาจ (ถ้ามี)']],['การส่งและหลักฐาน',SEND],
+    ['เตรียมฟ้อง',['เก็บตารางคำนวณยอดหนี้และดอกเบี้ย ณ วันที่ส่งหนังสือ','นับวันครบ ๖๐ วันจากวันที่ลงในใบตอบรับ แล้วจึงฟ้อง']]],
+  loan:[['ก่อนส่ง',['ทำหนังสือ<b>แยกฉบับ</b>ถึงผู้กู้ และผู้ค้ำประกันแต่ละคน',
+      'ต้องบอกกล่าวผู้ค้ำประกัน<b>ภายใน ๖๐ วันนับแต่วันที่ลูกหนี้ผิดนัด</b> (ป.พ.พ. มาตรา ๖๘๖) ถ้าช้ากว่านี้ ผู้ค้ำประกันไม่ต้องรับผิดในดอกเบี้ยและค่าเสียหายที่เกิดหลังพ้น ๖๐ วัน',
+      'การกู้เงินเกิน ๒,๐๐๐ บาท ต้องมีหลักฐานเป็นหนังสือที่ผู้กู้ลงลายมือชื่อ (มาตรา ๖๕๓) และตรวจว่าสัญญาติดอากรแสตมป์ครบ',
+      'ดอกเบี้ยเรียกได้ไม่เกินร้อยละ ๑๕ ต่อปี (มาตรา ๖๕๔) ถ้าสัญญาคิดเกิน อาจเรียกดอกเบี้ยไม่ได้เลย',
+      'แนบสำเนาสัญญากู้ สัญญาค้ำประกัน หลักฐานการรับเงิน (สลิปโอน) และตารางยอดหนี้']],['การส่งและหลักฐาน',SEND],
+    ['เตรียมฟ้อง',['เก็บสลิปการโอนเงินกู้ และหลักฐานการชำระคืนบางส่วน (ถ้ามี) เรียงตามวันที่','เก็บแชตหรือข้อความทวงถาม โดยแคปหน้าจอให้เห็นชื่อบัญชี วันที่ และเวลา','คดีกู้ยืมเงินมีอายุความ ๑๐ ปี ส่วนดอกเบี้ยค้างชำระมีอายุความ ๕ ปี']]],
+  share:[['ก่อนส่ง',['ตรวจว่าวงแชร์เป็นไปตาม พ.ร.บ.การเล่นแชร์ พ.ศ. ๒๕๓๔ (เช่น นายวงเป็นบุคคลธรรมดา จำนวนวง จำนวนสมาชิก ทุนกองกลาง) เพราะอาจกระทบการฟ้องเรียกเงิน',
+      'ระบุให้ชัดว่าเจ้าหนี้เป็นลูกแชร์หรือนายวงแชร์ และเงินที่ทวงคืออะไร (เงินกองแชร์ที่ไม่ได้รับ / ค่าแชร์ที่ลูกแชร์ไม่ส่ง)',
+      'แนบบัญชีรายชื่อลูกแชร์ ตารางการเปีย และหลักฐานการโอนเงินค่าแชร์ทุกงวด']],['การส่งและหลักฐาน',SEND],
+    ['เตรียมฟ้อง',['เก็บแชตกลุ่มไลน์วงแชร์ทั้งหมด (export แชต) และภาพประกาศผลการเปียแต่ละงวด','รวบรวมสลิปโอนเงินจากลูกแชร์คนอื่นที่ยืนยันการเล่นแชร์ และขอให้มาเป็นพยานได้']]],
+  loanContract:[['ก่อนลงนาม',['ตรวจบัตรประชาชนตัวจริงของคู่สัญญาทุกคน ถ่ายสำเนาและให้เจ้าของลงชื่อรับรองสำเนา','ดอกเบี้ยต้องไม่เกินร้อยละ ๑๕ ต่อปี (ป.พ.พ. มาตรา ๖๕๔)',
+      'สัญญาค้ำประกันต้องทำเป็นหนังสือ ลงลายมือชื่อผู้ค้ำประกัน ระบุหนี้และวงเงินที่ค้ำให้ชัด (มาตรา ๖๘๐ และ ๖๘๑) และห้ามให้ผู้ค้ำที่เป็นบุคคลธรรมดารับผิดอย่างลูกหนี้ร่วม (มาตรา ๖๘๑/๑)',
+      'ถ้าผู้กู้หรือผู้ค้ำมีคู่สมรส ควรให้คู่สมรสลงนามให้ความยินยอม']],
+    ['ขณะลงนาม',['ให้ลงลายมือชื่อต่อหน้า<b>พยานอย่างน้อย ๒ คน</b> ที่ไม่ใช่คู่สัญญา และให้พยานเขียนชื่อตัวบรรจง','ลงชื่อกำกับทุกหน้า และขีดฆ่าช่องว่างที่ไม่ใช้','ถ่ายรูปหรือวิดีโอขณะลงนามและขณะส่งมอบเงิน','ทำสัญญา ๒ ฉบับ ข้อความตรงกัน เก็บไว้ฝ่ายละฉบับ']],
+    ['หลังลงนาม',['ติดอากรแสตมป์ ๑ บาท ต่อทุก ๒,๐๐๐ บาท (เศษของ ๒,๐๐๐ ให้นับเป็น ๒,๐๐๐) สูงสุด ๑๐,๐๐๐ บาท และขีดฆ่า หรือชำระอากรแบบอิเล็กทรอนิกส์ มิฉะนั้นใช้เป็นพยานหลักฐานในศาลไม่ได้',
+      'ส่งมอบเงินโดยโอนเข้าบัญชีผู้กู้ เก็บสลิปไว้ ถ้าจ่ายเงินสด ให้ผู้กู้เขียนรับเงินด้วยลายมือตนเอง','เก็บต้นฉบับสัญญาไว้ในที่ปลอดภัย และสแกนเก็บสำรอง']]],
+  lendContract:[['ก่อนลงนาม',['แยกให้ชัดว่าเป็นยืมใช้คงรูป (คืนทรัพย์ชิ้นเดิม มาตรา ๖๔๐) หรือยืมใช้สิ้นเปลือง (คืนของประเภท ชนิด ปริมาณเดียวกัน มาตรา ๖๕๐) ถ้ามีค่าตอบแทนการใช้ อาจกลายเป็นสัญญาเช่า',
+      'ระบุทรัพย์ให้ละเอียด (ยี่ห้อ รุ่น หมายเลขเครื่อง ทะเบียน สี สภาพ มูลค่า) และแนบรูปถ่ายทรัพย์','สัญญายืมบริบูรณ์เมื่อส่งมอบทรัพย์ (มาตรา ๖๔๑) ควรทำบันทึกส่งมอบลงชื่อผู้ยืม']],
+    ['ขณะลงนามและส่งมอบ',['ลงนามต่อหน้าพยานอย่างน้อย ๒ คน','ถ่ายรูปหรือวิดีโอสภาพทรัพย์ทุกด้าน พร้อมวันที่ ขณะส่งมอบ','ถ่ายสำเนาบัตรประชาชนผู้ยืมและให้ลงชื่อรับรองสำเนา']],
+    ['ระหว่างยืมและตอนรับคืน',['ผู้ยืมต้องเสียค่าใช้จ่ายบำรุงรักษาทรัพย์ (มาตรา ๖๔๗) เว้นแต่ตกลงไว้เป็นอย่างอื่น','ตรวจสภาพและถ่ายรูปตอนรับคืน ถ้าเสียหาย ต้องฟ้องเรียกค่าเสียหายภายใน ๖ เดือนนับแต่วันได้ทรัพย์คืน (มาตรา ๖๔๙)']]]
+};
+
+/* ---------- state ---------- */
+let user=LS.get('answerUser',null);
+let W=LS.get('nWork',{});
+let files=[];
+const saveW=()=>LS.set('nWork',W);
+async function api(action,payload){
+  if(!API)throw new Error('ยังไม่ได้ตั้งค่าระบบหลังบ้าน (config.js)');
+  const r=await fetch(API,{method:'POST',body:JSON.stringify(Object.assign({action},payload))});
+  if(!r.ok)throw new Error('เชื่อมต่อระบบไม่ได้ ('+r.status+')');
+  const j=await r.json();if(!j.ok)throw new Error(j.error||'ระบบขัดข้อง');return j;
+}
+function show(n){[1,2,3,4,5].forEach(i=>$('s'+i).hidden=i!==n);document.querySelectorAll('#steps span').forEach(s=>{const k=+s.dataset.s;s.className=k===n?'on':(k<n?'done':'')});W.step=n;saveW()}
+async function refreshQuota(){if(!user)return;try{const st=await api('status',{userId:user.userId});$('quota').textContent=st.open?'วันนี้ใช้ได้อีก '+toTh(st.leftToday)+' งาน':'ระบบปิดให้บริการชั่วคราว';if(!st.registered)show(1)}catch(e){$('quota').textContent=''}}
+
+/* ---------- step 1 ---------- */
+if(user){$('rName').value=user.name||'';$('rPhone').value=user.phone||'';$('rLine').value=user.line||'';$('rEmail').value=user.email||''}
+$('regForm').addEventListener('submit',async e=>{
+  e.preventDefault();const name=$('rName').value.trim(),phone=$('rPhone').value.trim();
+  if(!name||!phone){$('regMsg').textContent='กรุณากรอกชื่อและเบอร์โทรศัพท์';return}
+  if(!$('rC1').checked||!$('rC2').checked){$('regMsg').textContent='กรุณาติ๊กยอมรับทั้ง 2 ข้อ';return}
+  const u={userId:(user&&user.userId)||uid(),name,phone,line:$('rLine').value.trim(),email:$('rEmail').value.trim(),role:$('rRole').value};
+  $('regBtn').disabled=true;$('regMsg').textContent='กำลังบันทึก…';
+  try{await api('register',Object.assign({consent:true},u));user=u;LS.set('answerUser',u);$('regMsg').textContent='';show(2);refreshQuota()}
+  catch(err){$('regMsg').textContent=err.message}finally{$('regBtn').disabled=false}
+});
+
+/* ---------- step 2 ---------- */
+Object.entries(TYPES).forEach(([k,t])=>{const b=document.createElement('button');b.type='button';b.className='type';b.dataset.k=k;b.setAttribute('aria-pressed','false');
+  b.innerHTML='<i></i><b></b><span></span>';b.querySelector('i').textContent=t.kind==='letter'?'หนังสือบอกกล่าว':'แบบฟอร์มสัญญา';b.querySelector('b').textContent=t.name;b.querySelector('span').textContent=t.desc;
+  b.onclick=()=>{document.querySelectorAll('.type').forEach(x=>x.setAttribute('aria-pressed',x===b));W.type=k;saveW();$('toForm').disabled=false};$('types').append(b)});
+$('toForm').onclick=()=>{if(!W.type)return;if(W.formType!==W.type){W.form={};W.parties=null;W.formType=W.type}buildForm();show(3);window.scrollTo({top:$('s3').offsetTop-80})};
+
+/* ---------- step 3 ---------- */
+function blankParty(){const o={};PF.forEach(([k])=>o[k]='');return o}
+function buildForm(){
+  const T=TYPES[W.type];$('s3title').textContent=T.name;
+  if(!W.parties){W.parties={};T.parties.forEach(p=>W.parties[p.key]=p.min?[blankParty()]:[])}
+  drawParties();
+  const g=$('fields');g.innerHTML='';W.form=W.form||{};
+  T.fields.forEach(f=>{const l=document.createElement('label');l.className='f'+(f.full||f.type==='textarea'?' full':'');l.textContent=f.label;
+    const i=document.createElement(f.type==='textarea'?'textarea':'input');if(f.type==='date')i.type='date';if(f.type==='number'){i.inputMode='numeric'}
+    if(f.type==='textarea')i.rows=3;i.value=W.form[f.key]!=null?W.form[f.key]:(f.type==='date'&&(f.key==='date')?today():(f.def||''));
+    i.oninput=()=>{W.form[f.key]=i.value;saveW()};W.form[f.key]=i.value;l.append(i);g.append(l)});
+  $('senderCard').hidden=T.kind!=='letter';
+  const L=W.lawyer||LS.get('nLawyer',null)||fromComplaintLawyer();
+  $('lName').value=L.name||'';$('lLic').value=L.lic||'';$('lOffice').value=L.office||'';$('lTel').value=L.tel||'';$('lAddr').value=L.addr||'';
+  document.querySelector('input[name=sender][value="'+(W.sender||'lawyer')+'"]').checked=true;$('lawyerBox').hidden=(W.sender||'lawyer')!=='lawyer';
+  $('docDate').value=W.docDate||today();saveW();
+}
+function fromComplaintLawyer(){const c=LS.get('cLawyer',{});if(!c.wName)return{};
+  const addr=[c.wHouse&&'เลขที่ '+c.wHouse,c.wMoo&&'หมู่ที่ '+c.wMoo,c.wRoad&&'ถนน'+c.wRoad,c.wSoi&&'ซอย'+c.wSoi,c.wSub&&'ตำบล'+c.wSub,c.wDist&&'อำเภอ'+c.wDist,c.wProv&&'จังหวัด'+c.wProv,c.wPost].filter(Boolean).join(' ');
+  return{name:c.wName,lic:c.wLic,tel:c.wTel,addr}}
+function drawParties(){
+  const T=TYPES[W.type],box=$('parties');box.innerHTML='';
+  T.parties.forEach(p=>{const list=W.parties[p.key]=W.parties[p.key]||[];
+    list.forEach((o,i)=>{const c=document.createElement('div');c.className='card';const h=document.createElement('h3');h.textContent=p.label+(list.length>1?' คนที่ '+toTh(i+1):'');
+      if(list.length>p.min){const rm=document.createElement('button');rm.type='button';rm.className='rm';rm.textContent='ลบ';rm.onclick=()=>{list.splice(i,1);saveW();drawParties()};h.append(rm)}
+      c.append(h);const g=document.createElement('div');g.className='grid3';
+      PF.forEach(([k,l,full])=>{const lb=document.createElement('label');lb.className='f'+(full?' full':'');lb.textContent=l;const inp=document.createElement(full?'textarea':'input');if(full)inp.rows=2;inp.value=o[k]||'';inp.oninput=()=>{o[k]=inp.value;saveW()};lb.append(inp);g.append(lb)});
+      c.append(g);box.append(c)});
+    if(p.many||!list.length){const a=document.createElement('button');a.type='button';a.className='add';a.textContent='+ เพิ่ม'+p.label.replace(/\s*\(.*\)/,'');a.onclick=()=>{list.push(blankParty());saveW();drawParties()};box.append(a)}
+  });
+}
+document.querySelectorAll('input[name=sender]').forEach(r=>r.onchange=()=>{W.sender=r.value;$('lawyerBox').hidden=r.value!=='lawyer';saveW()});
+['lName','lLic','lOffice','lTel','lAddr'].forEach(k=>$(k).addEventListener('input',()=>{W.lawyer={name:$('lName').value,lic:$('lLic').value,office:$('lOffice').value,tel:$('lTel').value,addr:$('lAddr').value};LS.set('nLawyer',W.lawyer);saveW()}));
+$('docDate').oninput=()=>{W.docDate=$('docDate').value;saveW()};
+$('back2').onclick=()=>show(2);
+
+const MAX_BYTES=14e6,b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+$('fileIn').onchange=async e=>{
+  for(const f of e.target.files){if(files.length>=10){toast('ใส่ได้สูงสุด ๑๐ ไฟล์');break}
+    try{if(/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name)){files.push({name:f.name,mime:'application/pdf',data:b64(await f.arrayBuffer())})}
+      else{const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();const sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+        c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);
+        files.push({name:f.name,mime:'image/jpeg',data:c.toDataURL('image/jpeg',.85).split(',')[1]})}}catch(err){toast('เปิดไฟล์ไม่ได้: '+f.name)}}
+  e.target.value='';drawFiles()};
+function drawFiles(){const b=$('files');b.innerHTML='';files.forEach((f,i)=>{const s=document.createElement('span');s.textContent=f.name;const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','ลบไฟล์');x.onclick=()=>{files.splice(i,1);drawFiles()};s.append(x);b.append(s)})}
+
+/* data sent to the AI, with Thai labels */
+function payload(){
+  const T=TYPES[W.type],o={ประเภท:T.name};
+  T.parties.forEach(p=>{const l=(W.parties[p.key]||[]).filter(x=>x.name&&x.name.trim()).map(x=>({ชื่อ:x.name,เลขประจำตัวประชาชน:x.idCard,ที่อยู่:x.addr,โทรศัพท์:x.phone}));if(l.length)o[p.label]=l});
+  const d={};T.fields.forEach(f=>{let v=W.form[f.key];if(f.type==='date')v=thDate(v);if(v)d[f.label]=v});o.ข้อมูล=d;
+  if(T.kind==='letter'){o.ผู้ส่งหนังสือ=W.sender==='self'?'เจ้าหนี้ส่งเอง':{ฐานะ:'ทนายความผู้รับมอบอำนาจ',ชื่อ:$('lName').value,สำนักงาน:$('lOffice').value};o.วันที่หนังสือ=thDate($('docDate').value)}
+  return o;
+}
+$('checkBtn').onclick=async()=>{
+  $('err3').hidden=true;const T=TYPES[W.type];
+  const miss=T.parties.filter(p=>p.min&&!(W.parties[p.key]||[]).some(x=>x.name&&x.name.trim())).map(p=>p.label);
+  if(miss.length&&!files.length){$('err3').textContent='กรุณากรอกชื่อ: '+miss.join(', ')+' หรืออัปโหลดเอกสารที่มีชื่อ';$('err3').hidden=false;return}
+  if(files.reduce((s,f)=>s+f.data.length*.75,0)>MAX_BYTES){$('err3').textContent='ไฟล์รวมใหญ่เกินไป';$('err3').hidden=false;return}
+  $('busy3').hidden=false;$('checkBtn').disabled=true;
+  try{const r=await api('nCheck',{userId:user.userId,type:W.type,data:payload(),files:files.map(f=>({mime:f.mime,data:f.data}))});
+    W.jobId=r.jobId;W.check={facts:(r.facts||[]).map(tidy),issues:(r.issues||[]).map(tidy),questions:(r.questions||[]).map(tidy),fill:r.fill||{}};W.answers={};saveW();drawCheck();show(4);window.scrollTo({top:$('s4').offsetTop-80})}
+  catch(e){$('err3').textContent=e.message;$('err3').hidden=false}finally{$('busy3').hidden=true;$('checkBtn').disabled=false;refreshQuota()}
+};
+
+/* ---------- step 4 ---------- */
+function list(ul,items){ul.innerHTML='';items.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.append(li)})}
+function drawCheck(){
+  const c=W.check||{};list($('facts'),c.facts||[]);$('factsBox').hidden=!(c.facts||[]).length;list($('issues'),c.issues||[]);$('issuesBox').hidden=!(c.issues||[]).length;
+  const q=$('qs');q.innerHTML='';
+  if((c.questions||[]).length){const h=document.createElement('p');h.className='sec';h.innerHTML='<b>คำถามก่อนร่าง</b>'+(TYPES[W.type].ask?' <span class="req">(ต้องตอบก่อนร่าง)</span>':' <span class="status">(ข้อที่ไม่ทราบเว้นว่างได้)</span>');q.append(h)}
+  (c.questions||[]).forEach((t,i)=>{const d=document.createElement('label');d.className='q';const s=document.createElement('span');s.textContent=toTh(i+1)+'. '+t;const a=document.createElement('textarea');a.value=(W.answers||{})[i]||'';
+    a.oninput=()=>{W.answers=W.answers||{};W.answers[i]=a.value;saveW()};d.append(s,a);q.append(d)});
+  const fill=Object.entries(c.fill||{}).filter(([k,v])=>v);
+  if(fill.length){const b=document.createElement('div');b.className='box';b.innerHTML='<h3>ข้อมูลที่ AI เติมให้จากเอกสาร (ใช้ตอนร่าง)</h3>';const ul=document.createElement('ul');fill.forEach(([k,v])=>{const li=document.createElement('li');li.textContent=k+': '+tidy(v);ul.append(li)});b.append(ul);q.append(b)}
+}
+$('back3').onclick=()=>{buildForm();show(3)};
+async function doDraft(){
+  $('err4').hidden=true;const c=W.check||{},T=TYPES[W.type];
+  if(T.ask&&(c.questions||[]).some((q,i)=>!((W.answers||{})[i]||'').trim())){$('err4').textContent='สัญญายืมทรัพย์ต้องตอบคำถามให้ครบก่อนร่าง (ถ้าไม่มีให้ตอบว่า ไม่มี)';$('err4').hidden=false;show(4);return}
+  $('busy4').hidden=false;$('draftBtn').disabled=true;
+  const data=Object.assign(payload(),{ข้อมูลจากเอกสาร:c.facts||[],ข้อมูลที่เติมจากเอกสาร:c.fill||{},ประเด็นที่ตรวจพบ:c.issues||[],
+    คำถามและคำตอบ:(c.questions||[]).map((q,i)=>({คำถาม:q,คำตอบ:((W.answers||{})[i]||'').trim()||'(ไม่ทราบ)'}))});
+  try{const r=await api('nDraft',{userId:user.userId,jobId:W.jobId,type:W.type,data});W.docs=r.docs;W.edited=null;W.notes=(r.notes||[]).map(tidy);W.tab=0;saveW();show(5);renderDocs();window.scrollTo({top:$('s5').offsetTop-80})}
+  catch(e){$('err4').textContent=e.message;$('err4').hidden=false;if(W.step===5)show(4)}finally{$('busy4').hidden=true;$('draftBtn').disabled=false}
+}
+$('draftBtn').onclick=doDraft;$('redraft').onclick=()=>{show(4);doDraft()};$('back4').onclick=()=>{buildForm();show(3)};
+$('restart').onclick=()=>{W={type:W.type};saveW();files=[];drawFiles();show(2);window.scrollTo(0,0)};
+
+/* ---------- step 5: lay out the documents on A4 ---------- */
+const strip=(s,w)=>tidy(s).replace(new RegExp('^'+w+'\\s*'),'');
+function senderLines(){
+  if(W.sender==='self'){const c=(W.parties.creditor||W.parties.lender||[])[0]||{};return[c.name,c.addr,c.phone&&'โทร '+c.phone].filter(Boolean).map(toTh)}
+  return[$('lOffice').value||$('lName').value,$('lAddr').value,$('lTel').value&&'โทร '+$('lTel').value].filter(Boolean).map(toTh);
+}
+function signer(){
+  if(W.sender==='self'){const c=(W.parties.creditor||W.parties.lender||[])[0]||{};return{name:toTh(c.name||''),title:TYPES[W.type].parties[0].label.replace(/\s*\(.*\)/,'')}}
+  const cred=((W.parties.creditor||[])[0]||{}).name;
+  return{name:toTh($('lName').value),title:'ทนายความผู้รับมอบอำนาจ'+(cred?'จาก'+toTh(cred):''),lic:$('lLic').value&&'ใบอนุญาตทนายความเลขที่ '+toTh($('lLic').value)}
+}
+function partyName(label){
+  const P=W.parties||{},m=label.match(/ที่\s*([๑-๙1-9])/),idx=m?Math.max(0,(TH.indexOf(m[1])>=0?TH.indexOf(m[1]):+m[1])-1):0;
+  const k=/ค้ำ/.test(label)?'guarantor':/ให้กู้|ให้ยืม/.test(label)?'lender':/ผู้กู้|ผู้ยืม/.test(label)?'borrower':'';
+  return k?toTh((((P[k]||[])[idx])||{}).name||''):'';
+}
+function letterHTML(d){
+  const s=signer(),kv=(k,v)=>v&&v.length?'<div class="k">'+k+'</div><div>'+v+'</div>':'';
+  const ol=a=>(a||[]).map(x=>tidy(x).replace(/^(อ้างถึง|สิ่งที่ส่งมาด้วย)\s*/,'')).filter(Boolean);
+  const refs=ol(d.refs),encl=ol(d.encl),olh=a=>a.length===1?esc(a[0]):'<ol>'+a.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>';
+  return '<div class="from">'+senderLines().map(l=>'<p>'+esc(l)+'</p>').join('')+'</div>'+
+    '<p class="date">วันที่ '+esc(thDate($('docDate').value))+'</p>'+
+    '<div class="kv">'+kv('เรื่อง',esc(strip(d.subject,'เรื่อง')))+kv('เรียน',esc(strip(d.to,'เรียน')))+kv('อ้างถึง',refs.length?olh(refs):'')+kv('สิ่งที่ส่งมาด้วย',encl.length?olh(encl):'')+'</div>'+
+    (d.body||[]).map(p=>'<p class="para">'+esc(tidy(p))+'</p>').join('')+
+    '<div class="sign"><p>'+esc(tidy(d.closing||'ขอแสดงความนับถือ'))+'</p><div class="sp"></div><p>( '+esc(s.name||'                                ')+' )</p><p>'+esc(s.title)+'</p>'+(s.lic?'<p>'+esc(s.lic)+'</p>':'')+'</div>';
+}
+function contractHTML(d){
+  const f=W.form||{},sigs=(d.signatures||[]).map(tidy),wit=Math.max(2,+d.witnesses||2);
+  const one=(role,name)=>'<div class="one"><p>ลงชื่อ ....................................................... '+esc(role)+'</p><p>( '+esc(name||'                                                  ')+' )</p></div>';
+  return '<h1>'+esc(tidy(d.title))+'</h1>'+
+    '<p class="place">ทำที่ '+esc(toTh(f.place||'....................................................'))+'</p><p class="place">วันที่ '+esc(thDate(f.date)||'.......... เดือน .............................. พ.ศ. ............')+'</p><div class="gap"></div>'+
+    (d.intro||[]).map(p=>'<p class="para">'+esc(tidy(p))+'</p>').join('')+
+    (d.clauses||[]).map((c,i)=>'<p class="clause">ข้อ '+toTh(i+1)+'. '+esc(tidy(c).replace(/^ข้อ\s*[๐-๙0-9]+\.?\s*/,''))+'</p>').join('')+
+    (d.ending?'<p class="para">'+esc(tidy(d.ending))+'</p>':'')+
+    '<div class="sigs">'+sigs.map(r=>one(r,partyName(r))).join('')+Array.from({length:wit},()=>one('พยาน','')).join('')+'</div>';
+}
+function renderDocs(){
+  const docs=W.docs||[],tabs=$('tabs'),area=$('printArea');tabs.innerHTML='';area.innerHTML='';
+  docs.forEach((d,i)=>{
+    const t=document.createElement('button');t.type='button';t.className='tab';t.setAttribute('role','tab');t.textContent=tidy(d.label||d.title||('ฉบับที่ '+(i+1)));t.setAttribute('aria-selected',i===(W.tab||0));
+    t.onclick=()=>{W.tab=i;saveW();tabs.querySelectorAll('.tab').forEach((x,j)=>x.setAttribute('aria-selected',j===i));document.querySelectorAll('.sheet').forEach((s,j)=>s.hidden=j!==i)};tabs.append(t);
+    const s=document.createElement('div');s.className='sheet';s.contentEditable='true';s.spellcheck=false;s.hidden=i!==(W.tab||0);
+    s.innerHTML=(W.edited&&W.edited[i])||(d.kind==='contract'?contractHTML(d):letterHTML(d));
+    s.addEventListener('input',()=>{W.edited=W.edited||{};W.edited[i]=s.innerHTML;saveW()});area.append(s)});
+  tabs.hidden=docs.length<2;drawCaution();fit();
+}
+function fit(){const v=document.querySelector('.viewer');if(!v||v.offsetParent===null)return;const w=v.clientWidth-36,mm=210*96/25.4,z=Math.min(1,w/mm);document.querySelectorAll('.sheet').forEach(s=>s.style.zoom=z)}
+addEventListener('resize',fit);
+function drawCaution(){
+  const box=$('caution'),saved=W.done||{};box.innerHTML='<h3>ข้อควรระวัง</h3><p class="status" style="margin:0 0 6px">ติ๊กเมื่อทำแล้ว เก็บหลักฐานทุกอย่างไว้ใช้ฟ้องคดี</p>';
+  let n=0;const add=(t)=>{const id='c'+(n++);const l=document.createElement('label');const c=document.createElement('input');c.type='checkbox';c.checked=!!saved[id];c.onchange=()=>{W.done=W.done||{};W.done[id]=c.checked;saveW()};const s=document.createElement('span');s.innerHTML=t;l.append(c,s);box.append(l)};
+  (CAUT[W.type]||[]).forEach(([h,items])=>{const sm=document.createElement('small');sm.textContent=h;box.append(sm);items.forEach(add)});
+  if((W.notes||[]).length){const sm=document.createElement('small');sm.textContent='เฉพาะเรื่องนี้ (จาก AI)';box.append(sm);W.notes.forEach(t=>add(esc(t)))}
+}
+W.edited=W.edited||null;
+$('redraft').addEventListener('click',()=>{W.edited=null});
+function printHTML(){
+  const css=[...document.querySelectorAll('style')].map(x=>x.textContent).join('').split('/*DOC*/')[1].split('/*/DOC*/')[0];
+  const pages=[...document.querySelectorAll('.sheet')].map(x=>'<div class="sheet">'+x.innerHTML+'</div>').join('');
+  return '<!doctype html><html lang="th"><head><meta charset="utf-8"><title>'+esc(TYPES[W.type].name)+'</title>'+
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap"><style>'+css+
+    '@page{size:A4;margin:25mm 20mm 20mm 30mm}'+
+    'html,body{margin:0;background:#fff}.sheet{box-shadow:none!important;margin:0!important;padding:0!important;width:auto!important;min-height:0!important;zoom:1!important;break-after:page}.sheet:last-child{break-after:auto}'+
+    '</style></head><body>'+pages+'</body></html>';
+}
+window.__printHTML=printHTML;
+$('printBtn').onclick=()=>{
+  const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.append(f);
+  const d=f.contentDocument;d.open();d.write(printHTML());d.close();
+  const go=()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('พิมพ์ไม่ได้ ลองดาวน์โหลด Word แทน')}setTimeout(()=>f.remove(),60000)};
+  (f.contentDocument.fonts?f.contentDocument.fonts.ready:Promise.resolve()).then(()=>setTimeout(go,300));
+};
+$('wordBtn').onclick=()=>{
+  const css='@page WordSection1{size:595.3pt 841.9pt;margin:70.9pt 56.7pt 56.7pt 85.05pt}div.WordSection1{page:WordSection1}body{font-family:"TH SarabunPSK";font-size:16pt;line-height:1.15}p{margin:0}'+
+    '.from{margin-left:50%}.date{margin:12pt 0 12pt 40%}.para,.clause{text-indent:2.5cm;margin-top:6pt}.sign{margin:18pt 0 0 45%;text-align:center}.sp{height:28pt}h1{font-size:18pt;text-align:center;font-weight:bold}.place{text-align:right}.k{font-weight:normal}.one{text-align:center;margin-top:18pt}';
+  const parts=[...document.querySelectorAll('.sheet')].map(s=>{const c=s.cloneNode(true);
+    c.querySelectorAll('.kv').forEach(kv=>{const rows=[];const kids=[...kv.children];for(let i=0;i<kids.length;i+=2)rows.push('<tr><td valign="top" style="padding-right:10pt;white-space:nowrap">'+kids[i].innerHTML+'</td><td>'+(kids[i+1]?kids[i+1].innerHTML:'')+'</td></tr>');const t=document.createElement('div');t.innerHTML='<table cellpadding="0" cellspacing="0" style="border-collapse:collapse">'+rows.join('')+'</table>';kv.replaceWith(t.firstChild)});
+    c.querySelectorAll('.sigs').forEach(g=>{const ones=[...g.children],rows=[];for(let i=0;i<ones.length;i+=2)rows.push('<tr><td width="50%" align="center" valign="top" style="padding-top:18pt">'+ones[i].innerHTML+'</td><td width="50%" align="center" valign="top" style="padding-top:18pt">'+(ones[i+1]?ones[i+1].innerHTML:'')+'</td></tr>');const t=document.createElement('div');t.innerHTML='<table width="100%" cellpadding="0" cellspacing="0">'+rows.join('')+'</table>';g.replaceWith(t.firstChild)});
+    return c.innerHTML});
+  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>'+css+'</style></head><body><div class="WordSection1">'+
+    parts.join('<br clear="all" style="page-break-before:always">')+'</div></body></html>';
+  const blob=new Blob(['﻿',html],{type:'application/msword'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(TYPES[W.type].name.replace(/[\s/]+/g,'_'))+'.doc';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+};
+
+/* ---------- boot ---------- */
+if(!user)show(1);
+else if(W.step===5&&W.docs){buildForm();show(5);renderDocs()}
+else if(W.step===4&&W.check){buildForm();drawCheck();show(4)}
+else if(W.step===3&&W.type){buildForm();show(3)}
+else show(2);
+if(W.type){const b=document.querySelector('.type[data-k="'+W.type+'"]');if(b){b.setAttribute('aria-pressed','true');$('toForm').disabled=false}}
+refreshQuota();
+if(!API){$('trial').textContent='ระบบยังไม่ได้เชื่อมต่อหลังบ้าน';$('trial').style.color='#8a1c12';$('trial').style.background='#fdecea'}
+})();
+</script>
+</body>
+</html>

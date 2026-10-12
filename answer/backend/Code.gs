@@ -56,6 +56,8 @@ function doPost(e) {
       case 'cStart': return json(cStart(req));
       case 'cExtract': return json(cExtract(req));
       case 'cDraft': return json(cDraft(req));
+      case 'nCheck': return json(nCheck(req));
+      case 'nDraft': return json(nDraft(req));
       case 'admin': return json(admin(req));
       default: return json({ ok: false, error: 'ไม่รู้จักคำสั่ง' });
     }
@@ -109,7 +111,7 @@ function todayCounts(userId) {
   const take = Math.min(n, 3000); // recent rows are enough for a daily count
   const rows = sh.getRange(sh.getLastRow() - take + 1, 1, take, 14).getValues();
   let user = 0, total = 0;
-  rows.forEach(r => { if ((r[4] === 'extract' || r[4] === 'c_extract' || r[4] === 'c_start') && r[13] === 'ok' && new Date(r[0]) >= start) { total++; if (r[2] === userId) user++; } });
+  rows.forEach(r => { if ((r[4] === 'extract' || r[4] === 'c_extract' || r[4] === 'c_start' || r[4] === 'n_check') && r[13] === 'ok' && new Date(r[0]) >= start) { total++; if (r[2] === userId) user++; } });
   return { user, total };
 }
 
@@ -218,7 +220,7 @@ function draft(req) {
 function draftCount(jobId) {
   const sh = sheet(SHEET_JOBS), n = sh.getLastRow() - 1; if (n <= 0) return 0;
   const take = Math.min(n, 2000);
-  return sh.getRange(sh.getLastRow() - take + 1, 2, take, 4).getValues().filter(r => r[0] === jobId && (r[3] === 'draft' || r[3] === 'c_draft')).length;
+  return sh.getRange(sh.getLastRow() - take + 1, 2, take, 4).getValues().filter(r => r[0] === jobId && (r[3] === 'draft' || r[3] === 'c_draft' || r[3] === 'n_draft')).length;
 }
 
 /* ---------- Claude ---------- */
@@ -275,7 +277,7 @@ function admin(req) {
   const users = rows(SHEET_USERS, USER_HEAD), jobs = rows(SHEET_JOBS, JOB_HEAD);
   const day0 = new Date(); day0.setHours(0, 0, 0, 0);
   const month0 = new Date(day0.getFullYear(), day0.getMonth(), 1);
-  const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract' || j.stage === 'c_start') && j.status === 'ok');
+  const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract' || j.stage === 'c_start' || j.stage === 'n_check') && j.status === 'ok');
   const sum = (a, k) => Math.round(a.reduce((s, j) => s + (+j[k] || 0), 0) * 100) / 100;
   return {
     ok: true,
@@ -285,7 +287,7 @@ function admin(req) {
       usersToday: users.filter(u => new Date(u.createdAt) >= day0).length,
       cases: ext.length,
       casesToday: ext.filter(j => new Date(j.time) >= day0).length,
-      drafts: jobs.filter(j => (j.stage === 'draft' || j.stage === 'c_draft') && j.status === 'ok').length,
+      drafts: jobs.filter(j => (j.stage === 'draft' || j.stage === 'c_draft' || j.stage === 'n_draft') && j.status === 'ok').length,
       errors: jobs.filter(j => j.status === 'error').length,
       costMonth: sum(jobs.filter(j => new Date(j.time) >= month0), 'costTHB'),
       costAll: sum(jobs, 'costTHB')
@@ -450,3 +452,93 @@ const X_DRAFT_FORMAT = `ตอบ JSON รูปแบบนี้:
  "relief": ["คำขอส่วนแพ่งเท่านั้น สำหรับข้อ ๑–๔ ของแบบพิมพ์ (๖) เช่น 'ให้จำเลยคืนทรัพย์หรือใช้ราคาเป็นเงิน … บาท แก่โจทก์' หรือค่าสินไหมทดแทนตามประมวลกฎหมายวิธีพิจารณาความอาญา มาตรา ๔๓ หรือ ๔๔/๑ ไม่เกิน ๔ ข้อ ข้อละประโยค ไม่ต้องใส่เลขข้อ ห้ามใส่คำขอให้ลงโทษหรือบทมาตราในส่วนนี้ ถ้าไม่มีคำขอส่วนแพ่งให้ตอบ []"],
  "notes": ["สิ่งที่ทนายต้องตรวจหรือเติมก่อนยื่น เช่น อายุความ อำนาจฟ้อง เขตอำนาจศาล พยานที่ต้องนำสืบในชั้นไต่สวนมูลฟ้อง"]
 }`;
+
+/* =====================================================================
+ * AI ร่างหนังสือบอกกล่าวและสัญญา (/notice/)
+ * ขั้น ๑ nCheck: อ่านเอกสาร + ข้อมูลที่กรอก ตรวจความครบถ้วน ถามสิ่งที่ขาด
+ * ขั้น ๒ nDraft: ร่างเอกสารเป็นโครงสร้าง (หน้าเว็บจัดหน้าให้สวยงามเอง)
+ * ===================================================================== */
+const N_TYPES = {
+  mortgage: 'หนังสือบอกกล่าวบังคับจำนอง',
+  loan: 'หนังสือบอกกล่าวทวงถามหนี้เงินกู้ (ถึงผู้กู้ และ/หรือ ผู้ค้ำประกัน)',
+  share: 'หนังสือบอกกล่าวทวงถามเงินค่าแชร์',
+  loanContract: 'สัญญากู้ยืมเงิน และ/หรือ สัญญาค้ำประกัน',
+  lendContract: 'สัญญายืมทรัพย์ (ยืมใช้คงรูป หรือ ยืมใช้สิ้นเปลือง)'
+};
+
+const N_CHECK_SYS = `คุณเป็นทนายความไทย ตรวจข้อมูลก่อนร่างเอกสาร อ่านเอกสารแนบ (ถ้ามี) และข้อมูลที่ผู้ใช้กรอก แล้วตอบ JSON อย่างเดียว:
+{"facts":["ข้อเท็จจริงสำคัญที่อ่านได้จากเอกสาร ข้อละบรรทัด ใช้เลขไทย"],
+ "fill":{"ชื่อช่องที่ผู้ใช้เว้นว่างแต่พบในเอกสาร":"ค่าที่พบ"},
+ "issues":["ปัญหาหรือความเสี่ยงทางกฎหมายที่พบ เช่น ตัวเลขไม่ตรงกัน ขาดหลักฐาน ดอกเบี้ยเกินกฎหมาย ระยะเวลาไม่ถูกต้อง"],
+ "questions":["คำถามที่ต้องถามผู้ใช้ก่อนร่าง เฉพาะข้อมูลที่จำเป็นและยังไม่มี ไม่เกิน ๘ ข้อ"]}
+ห้ามเดาข้อมูล ถ้าข้อมูลครบแล้วให้ questions เป็น []`;
+
+const N_LEND_Q = 'สำหรับสัญญายืมทรัพย์: ต้องถามเสมอ (ถ้ายังไม่มีคำตอบ) ว่า ทรัพย์คืออะไร ยี่ห้อ รุ่น หมายเลข สภาพ มูลค่าโดยประมาณ, เป็นการยืมใช้คงรูป (คืนตัวทรัพย์เดิม) หรือยืมใช้สิ้นเปลือง (คืนของประเภทเดียวกัน), มีค่าตอบแทนหรือไม่ (ถ้ามีค่าตอบแทนอาจเป็นสัญญาเช่า), กำหนดเวลาคืนและสถานที่ส่งคืน, ใครออกค่าบำรุงรักษา, มีเงินประกันหรือผู้ค้ำประกันหรือไม่';
+
+function nCheck(req) {
+  const t0 = Date.now(), jobId = 'N' + Utilities.getUuid().slice(0, 7);
+  const stop = checkAllowed(req.userId);
+  if (stop) return { ok: false, error: stop };
+  const type = N_TYPES[req.type] ? req.type : 'loan';
+  const content = [];
+  (req.files || []).slice(0, 10).forEach((f, i) => {
+    content.push({ type: 'text', text: 'เอกสารที่ ' + (i + 1) });
+    content.push(f.mime === 'application/pdf'
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } }
+      : { type: 'image', source: { type: 'base64', media_type: f.mime, data: f.data } });
+  });
+  content.push({ type: 'text', text: 'ประเภทเอกสารที่จะร่าง: ' + N_TYPES[type] + '\n' + (type === 'lendContract' ? N_LEND_Q + '\n' : '') +
+    'ข้อมูลที่ผู้ใช้กรอก:\n' + clean(JSON.stringify(req.data || {}, null, 1), 12000) });
+  const meta = { court: '', caseKind: 'หนังสือ/สัญญา', matter: N_TYPES[type] };
+  let res, data;
+  try {
+    res = callClaude([{ role: 'user', content }], 4000, N_CHECK_SYS, 'low');
+    data = parseJson(res.text);
+    if (!data) throw new Error('no json');
+  } catch (err) {
+    logJob(jobId, req.userId, 'n_check', (req.files || []).length, meta, res, Date.now() - t0, 'error', String(err.message || err));
+    return { ok: false, error: 'AI ตรวจข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง' };
+  }
+  logJob(jobId, req.userId, 'n_check', (req.files || []).length, meta, res, Date.now() - t0, 'ok', '');
+  bumpUser(req.userId);
+  return { ok: true, jobId, facts: data.facts || [], fill: data.fill || {}, issues: data.issues || [], questions: data.questions || [] };
+}
+
+const N_DRAFT_SYS = `คุณเป็นทนายความไทย ร่างเอกสารด้วยภาษาราชการที่สุภาพ กระชับ ชัดเจน ถูกต้องตามกฎหมายไทย
+- ใช้เลขไทยทั้งหมด จำนวนเงินเขียนเป็นตัวเลขพร้อมตัวอักษรในวงเล็บ
+- ใช้เฉพาะข้อเท็จจริงที่ให้ ห้ามแต่งเพิ่ม ส่วนที่ไม่ทราบให้เขียน [ระบุ…]
+- หนังสือบอกกล่าว: เรียกผู้รับว่า "ท่าน" ผู้ส่งว่า "ข้าพเจ้า" ย่อหน้าแรกขึ้นต้น "ตามที่ท่าน…" เล่านิติสัมพันธ์ ย่อหน้าถัดไปเล่าการผิดนัดและยอดหนี้ ย่อหน้าสุดท้ายขึ้นต้น "ฉะนั้น โดยหนังสือฉบับนี้ ข้าพเจ้า…" บอกกล่าวให้ชำระภายในกำหนดนับแต่วันที่ได้รับหนังสือ ระบุวิธีชำระ และผลถ้าเพิกเฉย
+- บอกกล่าวบังคับจำนอง: ให้เวลาชำระไม่น้อยกว่า ๖๐ วันนับแต่วันที่ลูกหนี้ได้รับคำบอกกล่าว (ป.พ.พ. มาตรา ๗๒๘) ระบุทรัพย์ที่จำนอง และว่าหากเพิกเฉยจะฟ้องบังคับจำนอง ถ้าผู้จำนองไม่ใช่ลูกหนี้ ให้ทำหนังสือถึงผู้จำนองแยกอีกฉบับ (มาตรา ๗๓๕)
+- เงินกู้ที่มีผู้ค้ำประกัน: ทำหนังสือแยกฉบับถึงผู้กู้ และถึงผู้ค้ำประกันแต่ละคน หนังสือถึงผู้ค้ำประกันต้องแจ้งว่าลูกหนี้ผิดนัดเมื่อใด ยอดหนี้เท่าใด (ป.พ.พ. มาตรา ๖๘๖ เจ้าหนี้ต้องบอกกล่าวผู้ค้ำประกันภายใน ๖๐ วันนับแต่วันที่ลูกหนี้ผิดนัด ถ้าเกินกำหนด ผู้ค้ำประกันหลุดพ้นจากดอกเบี้ยและค่าสินไหมทดแทนที่เกิดขึ้นหลังพ้นกำหนด ๖๐ วันนั้น)
+- สัญญา: เขียนเป็นข้อ ๆ ครบถ้วน ข้อตกลงต้องไม่ขัดกฎหมาย (ดอกเบี้ยไม่เกินร้อยละ ๑๕ ต่อปี มาตรา ๖๕๔ / ห้ามให้ผู้ค้ำประกันที่เป็นบุคคลธรรมดารับผิดอย่างลูกหนี้ร่วม มาตรา ๖๘๑/๑ / ต้องระบุหนี้และวงเงินที่ค้ำประกันชัดเจน มาตรา ๖๘๑) ถ้ามีผู้ค้ำประกันให้แยกสัญญาค้ำประกันเป็นอีกฉบับ
+- ตอบ JSON อย่างเดียว ไม่มี markdown`;
+
+const N_FORMAT = `รูปแบบ JSON:
+{"docs":[
+ {"kind":"letter","label":"ชื่อสั้น เช่น ถึงผู้กู้","subject":"ข้อความเรื่อง (ไม่ต้องมีคำว่า เรื่อง)","to":"ชื่อผู้รับ (ไม่ต้องมีคำว่า เรียน)","refs":["เอกสารที่อ้างถึง (ไม่ต้องมีคำว่า อ้างถึง)"],"encl":["สิ่งที่ส่งมาด้วย พร้อมจำนวน"],"body":["ย่อหน้า"],"closing":"ขอแสดงความนับถือ"},
+ {"kind":"contract","label":"ชื่อสั้น","title":"ชื่อสัญญา","intro":["ย่อหน้านำ ระบุคู่สัญญา เลขประจำตัวประชาชน ที่อยู่ และคำเรียกแทน"],"clauses":["ข้อสัญญา ไม่ต้องใส่เลขข้อ"],"ending":"ย่อหน้าปิด เช่น คู่สัญญาได้อ่านและเข้าใจข้อความในสัญญานี้โดยตลอดแล้ว จึงได้ลงลายมือชื่อไว้เป็นสำคัญต่อหน้าพยาน","signatures":["ผู้ให้กู้","ผู้กู้"],"witnesses":2}
+],
+"notes":["ข้อควรระวังเฉพาะเรื่องนี้ที่ผู้ใช้ต้องทำก่อนส่งหรือก่อนลงนาม เช่น เอกสารที่ต้องแนบ การส่งไปรษณีย์ตอบรับ การเก็บหลักฐาน"]}
+หมายเหตุ: ไม่ต้องใส่ที่อยู่ผู้ส่ง วันที่ หรือลายเซ็นในหนังสือ (หน้าเว็บใส่ให้) สัญญาไม่ต้องใส่สถานที่และวันที่ทำสัญญา (หน้าเว็บใส่ให้)`;
+
+function nDraft(req) {
+  const t0 = Date.now();
+  const st = statusFor(req.userId);
+  if (!st.open) return { ok: false, error: 'ระบบปิดให้บริการชั่วคราว' };
+  if (!st.registered || st.blocked) return { ok: false, error: 'ไม่สามารถใช้งานได้' };
+  if (!req.jobId || draftCount(req.jobId) >= 3) return { ok: false, error: 'งานนี้ให้ AI ร่างใหม่ครบ 3 ครั้งแล้ว กรุณาแก้ไขข้อความเอง หรือเริ่มงานใหม่' };
+  const type = N_TYPES[req.type] ? req.type : 'loan';
+  const meta = { court: '', caseKind: 'หนังสือ/สัญญา', matter: N_TYPES[type] };
+  const user = 'ประเภทเอกสาร: ' + N_TYPES[type] + '\nข้อมูล:\n' + clean(JSON.stringify(req.data || {}, null, 1), 16000) + '\n\n' + N_FORMAT;
+  let res, data;
+  try {
+    res = callClaude([{ role: 'user', content: user }], 12000, N_DRAFT_SYS, prop('C_EFFORT', 'medium'));
+    data = parseJson(res.text);
+    if (!data || !data.docs || !data.docs.length) throw new Error('no docs');
+  } catch (err) {
+    logJob(req.jobId, req.userId, 'n_draft', 0, meta, res, Date.now() - t0, 'error', String(err.message || err));
+    return { ok: false, error: 'AI ร่างเอกสารไม่สำเร็จ ลองกดร่างใหม่อีกครั้ง' };
+  }
+  logJob(req.jobId, req.userId, 'n_draft', 0, meta, res, Date.now() - t0, 'ok', '');
+  return { ok: true, docs: data.docs, notes: data.notes || [] };
+}
