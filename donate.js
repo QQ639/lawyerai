@@ -61,7 +61,7 @@
     const d=document.createElement('div');d.className='dn';
     d.innerHTML=`${closeBtn?'<button class="dn-x" type="button" aria-label="ปิด">×</button>':''}
 <div class="dn-h"><img src="${IMG('logo.jpg')}" alt="ทนาย Ai+"><div><b>ช่วยเติมน้ำมัน</b>สนับสนุนค่าใช้จ่าย AI และการพัฒนาเว็บไซต์ (ไม่บังคับ)<small>ไม่ใช่ค่าบริการทางกฎหมาย ใช้งานต่อได้ตามปกติแม้ไม่สนับสนุน</small></div></div>
-<div class="dn-amt"><button type="button" data-a="20">๒๐ บาท</button><button type="button" data-a="50" class="on">๕๐ บาท</button><button type="button" data-a="100">๑๐๐ บาท</button><label>ระบุเอง<input inputmode="decimal" placeholder="จำนวน" aria-label="ระบุจำนวนเงินเอง"> บาท</label></div>
+<div class="dn-amt"><button type="button" data-a="40">๔๐ บาท</button><button type="button" data-a="60" class="on">๖๐ บาท</button><button type="button" data-a="100">๑๐๐ บาท</button><label>ระบุเอง<input inputmode="decimal" placeholder="จำนวน" aria-label="ระบุจำนวนเงินเอง"> บาท</label></div>
 <div class="dn-body"><div class="dn-card"><span class="pp">PromptPay พร้อมเพย์</span><div class="cv"></div><div class="amt"></div></div>
 <div class="dn-txt"><p>สแกนด้วยแอปธนาคารใดก็ได้ผ่านพร้อมเพย์ ไม่มีค่าธรรมเนียม ยอดเงินขึ้นให้อัตโนมัติ</p><p>ใช้มือถือ: กด “บันทึกรูป QR” แล้วเลือกรูปนี้ในเมนูสแกนของแอปธนาคาร</p><button type="button" class="sv">บันทึกรูป QR</button></div></div>
 <div class="dn-pair"><img src="${IMG('thanks.jpg')}" alt="ขอบคุณที่ช่วยค่าเชื้อเพลิง AI"><a role="button" tabindex="0" title="ย้อนกลับไปแก้ไขเอกสาร"><img src="${IMG('back.jpg')}" alt="ย้อนกลับไปแก้ไขเอกสาร"></a></div>`;
