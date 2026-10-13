@@ -183,6 +183,8 @@ const DRAFT_SYSTEM = `คุณเป็นผู้ช่วยทนายค�
 - อ้างตัวบทกฎหมายเฉพาะที่มั่นใจว่าถูกต้อง ถ้าไม่แน่ใจให้เขียนหลักการโดยไม่ระบุเลขมาตรา
 - คดีอาญา: คำให้การให้สั้น ระบุว่าจำเลยให้การปฏิเสธ (หรือรับสารภาพ ตามที่ผู้ใช้เลือก) และจะนำสืบในชั้นพิจารณา ไม่ต้องบรรยายยาว
 - ข้อสุดท้ายเป็นคำขอท้ายคำให้การ เช่น "ด้วยเหตุดังกล่าวข้างต้น จำเลยจึงขอศาลได้โปรดพิพากษายกฟ้องโจทก์ และให้โจทก์เป็นผู้ชำระค่าฤชาธรรมเนียมและค่าทนายความแทนจำเลย" ปรับให้เหมาะกับคดี
+- ถ้ามีรายละเอียดการต่อสู้ของแต่ละแนวทาง ให้บรรยายข้อต่อสู้นั้นตามรายละเอียดที่ผู้ใช้ให้ ครบทุกข้อ
+- ถ้ามีเอกสารฝั่งจำเลยแนบมา ให้อ่านและใช้ข้อเท็จจริงจากเอกสาร (วันที่ จำนวนเงิน ผู้รับ) และอ้างในคำให้การว่า "ปรากฏตามสำเนา… เอกสารท้ายคำให้การหมายเลข ล.๑" ตามลำดับไฟล์ ล.๑ ล.๒ … และใน checklist ให้เตือนแนบสำเนาเอกสารและรับรองสำเนาถูกต้อง
 - ใช้ตัวเลขไทยทั้งหมด
 ตอบเป็น JSON อย่างเดียว ไม่มี markdown:
 {"body":"เนื้อหาคำให้การ แต่ละข้อคั่นด้วยการขึ้นบรรทัดใหม่ \\n","checklist":["สิ่งที่ผู้ใช้ต้องตรวจหรือเติมก่อนยื่น"],"issues":["ประเด็นข้อต่อสู้ที่ใช้ สั้น ๆ"]}`;
@@ -200,20 +202,29 @@ function draft(req) {
   };
   const user = [
     'ข้อมูลคดีจากคำฟ้อง:', JSON.stringify(brief, null, 1),
-    '', 'แนวทางที่ผู้ใช้เลือก: ' + ((req.options || []).join(', ') || 'ไม่ได้เลือก'),
+    '', 'แนวทางการต่อสู้ที่ผู้ใช้เลือก (พร้อมรายละเอียด):', ((req.options || []).map((o, i) => (i + 1) + '. ' + clean(o, 2000)).join('\n') || 'ไม่ได้เลือก'),
     '', 'ข้อเท็จจริงฝั่งจำเลยตามที่ผู้ใช้เล่า:', clean(req.facts, 6000) || '(ผู้ใช้ไม่ได้ให้ข้อมูลเพิ่ม ให้ร่างแบบทั่วไปและเว้น [ระบุ...] ไว้)',
     '', 'ช่วยพิมพ์ตัวอย่างคำให้การจำเลยตามรูปแบบที่กำหนด'
   ].join('\n');
+  /* defendant's documents (optional): read together with the instructions, cited as ล.๑ ล.๒ … */
+  const dfiles = (req.files || []).slice(0, 8), content = [];
+  dfiles.forEach((f, i) => {
+    content.push({ type: 'text', text: 'เอกสารฝั่งจำเลย ล.' + (i + 1) + (f.name ? ' (' + clean(f.name, 80) + ')' : '') });
+    content.push(f.mime === 'application/pdf'
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } }
+      : { type: 'image', source: { type: 'base64', media_type: f.mime, data: f.data } });
+  });
+  content.push({ type: 'text', text: user });
   let res, data;
   try {
-    res = callClaude([{ role: 'user', content: user }], 6000, DRAFT_SYSTEM);
+    res = callClaude([{ role: 'user', content: dfiles.length ? content : user }], 6000, DRAFT_SYSTEM);
     data = parseJson(res.text);
     if (!data || !data.body) throw new Error('no body');
   } catch (err) {
-    logJob(req.jobId, req.userId, 'draft', 0, x, res, Date.now() - t0, 'error', String(err.message || err));
+    logJob(req.jobId, req.userId, 'draft', dfiles.length, x, res, Date.now() - t0, 'error', String(err.message || err));
     return { ok: false, error: 'AI ร่างคำให้การไม่สำเร็จ ลองกดร่างใหม่อีกครั้ง' };
   }
-  logJob(req.jobId, req.userId, 'draft', 0, x, res, Date.now() - t0, 'ok', '');
+  logJob(req.jobId, req.userId, 'draft', dfiles.length, x, res, Date.now() - t0, 'ok', '');
   return { ok: true, body: data.body, checklist: data.checklist || [], issues: data.issues || [] };
 }
 
@@ -333,6 +344,21 @@ const C_EXTRACT_PROMPT = `คุณเป็นผู้ช่วยทนาย
  "payments": "การชำระหนี้ที่ปรากฏในเอกสาร ถ้ามี"
 }`;
 
+/* คดีแพ่งสามัญ ทุกประเภท (/civil/) */
+const G_EXTRACT_PROMPT = `คุณเป็นผู้ช่วยทนายความไทย อ่านเอกสารที่แนบมาทุกไฟล์ ไฟล์เรียงลำดับ ๑, ๒, ๓ … ตามที่แนบ เพื่อเตรียมฟ้องคดีแพ่ง (ผิดสัญญา ละเมิด เรียกค่าเสียหาย เรียกคืนทรัพย์ ฯลฯ)
+กติกา:
+- ใช้เฉพาะข้อมูลที่ปรากฏในเอกสารจริง ห้ามเดา ไม่พบให้ใส่ "" หรือ [] หรือ 0
+- ถ้าไม่มีเอกสารที่เกี่ยวกับข้อพิพาทเลย หรืออ่านไม่ออก ให้ ok=false และบอกเหตุผลใน reason
+- ตอบเป็น JSON อย่างเดียว ไม่มี markdown
+{
+ "ok": true, "reason": "",
+ "documents": [{"file": 1, "title": "ชื่อเอกสาร เช่น สัญญาซื้อขาย / ใบแจ้งหนี้ / หนังสือบอกกล่าว", "date": "วันที่ของเอกสารตามที่ปรากฏ"}],
+ "persons": [{"role": "ฝ่ายที่จะเป็นโจทก์ เช่น ผู้ขาย เจ้าหนี้ ผู้เสียหาย หรือ ฝ่ายที่จะเป็นจำเลย เช่น ผู้ซื้อ ลูกหนี้ ผู้ทำละเมิด หรือ พยาน", "side": "plaintiff หรือ defendant หรือ other", "title": "", "name": "", "surname": "", "age": "", "idCard": "", "nationality": "", "occupation": "", "houseNo": "", "moo": "", "road": "", "soi": "", "subdistrict": "", "district": "", "province": "", "postcode": "", "phone": ""}],
+ "claim": {"charge": "ข้อหาสั้น ๆ เช่น ผิดสัญญาซื้อขาย เรียกค่าเสียหาย", "amount": 0, "breakdown": "ที่มาของยอดตามเอกสาร ถ้ามี"},
+ "facts": ["ข้อเท็จจริงสำคัญตามลำดับเวลา ข้อละ 1-2 ประโยค"],
+ "clauses": ["ข้อสัญญาที่สำคัญคัดตามตัวอักษร ถ้ามี"]
+}`;
+
 function cExtract(req) {
   const t0 = Date.now(), jobId = 'C' + Utilities.getUuid().slice(0, 7);
   const stop = checkAllowed(req.userId);
@@ -347,8 +373,9 @@ function cExtract(req) {
       : { type: 'image', source: { type: 'base64', media_type: f.mime, data: f.data } });
   });
   const crim = req.kind === 'criminal';
-  content.push({ type: 'text', text: crim ? X_EXTRACT_PROMPT : C_EXTRACT_PROMPT });
-  const meta = crim ? { court: '', caseKind: 'อาญา', matter: 'ฟ้องคดีอาญา' } : { court: '', caseKind: 'แพ่ง', matter: 'ฟ้องผิดสัญญากู้ยืมเงิน' };
+  const gen = req.kind === 'general';
+  content.push({ type: 'text', text: crim ? X_EXTRACT_PROMPT : gen ? G_EXTRACT_PROMPT : C_EXTRACT_PROMPT });
+  const meta = crim ? { court: '', caseKind: 'อาญา', matter: 'ฟ้องคดีอาญา' } : { court: '', caseKind: 'แพ่ง', matter: gen ? 'ฟ้องคดีแพ่งสามัญ' : 'ฟ้องผิดสัญญากู้ยืมเงิน' };
   let res, data;
   try {
     res = callClaude([{ role: 'user', content }], 6000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น', 'low');

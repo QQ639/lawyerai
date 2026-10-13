@@ -43,6 +43,10 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;line-height:1.45;cursor:pointer;background:#fff}
 .opt input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--ink)}
+.optw{display:flex;flex-direction:column;gap:6px}.optw textarea{min-height:64px;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}
+.optw textarea[hidden]{display:none}
+.ddrop{margin-top:8px;border:1.5px dashed var(--line);border-radius:12px;padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff}
+.ddrop .status{flex:1 1 200px}
 .opt:has(input:checked){border-color:var(--ink);background:var(--ink-soft)}
 .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
 .btn[disabled]{opacity:.5;pointer-events:none}
@@ -158,6 +162,12 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
     <div class="opts" id="opts"></div>
     <label class="f" style="margin-top:12px">เล่าข้อเท็จจริงฝั่งจำเลยเพิ่มเติม (ยิ่งละเอียด ร่างยิ่งตรง)
       <textarea id="facts" placeholder="เช่น จำเลยกู้เงินจริง ๕๐,๐๐๐ บาท ชำระไปแล้ว ๒๐ งวด งวดละ ๒,๐๐๐ บาท มีหลักฐานการโอน ยอดที่โจทก์ฟ้องรวมดอกเบี้ยและค่าปรับสูงเกินจริง…"></textarea></label>
+    <p class="sec">เอกสารฝั่งจำเลย (ถ้ามี)</p>
+    <div class="ddrop" id="ddrop">
+      <span class="btn file-btn">เลือกไฟล์ / ถ่ายภาพ<input id="dFileIn" type="file" accept="image/*,application/pdf" multiple></span>
+      <span class="status">เช่น สลิปโอนเงิน ใบเสร็จ สัญญา ข้อความแชท AI จะอ่านประกอบการร่างและอ้างเป็นเอกสารท้ายคำให้การ ล.๑ ล.๒ … (สูงสุด ๘ ไฟล์ ไม่ถูกเก็บไว้ในระบบ ถ้ารีเฟรชหน้าต้องเลือกใหม่)</span>
+    </div>
+    <div class="thumbs" id="dthumbs"></div>
     <div class="row"><button class="btn primary" id="draftBtn">ให้ AI ช่วยพิมพ์คำให้การ</button><button class="btn ghost" id="restart3">เริ่มคดีใหม่</button></div>
     <div class="busy" id="busy3" hidden><span class="spin"></span><span>AI กำลังพิมพ์ตัวอย่างคำให้การ ใช้เวลาประมาณ 30–90 วินาที</span></div>
     <div class="err" id="err3" hidden></div>
@@ -247,23 +257,37 @@ $('regForm').addEventListener('submit',async e=>{
 /* ---------- step 2: files ---------- */
 const MAX_FILES=12,MAX_BYTES=14e6;
 const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+async function readFile(f){ /* PDF as is; photos shrunk to 2000 px JPEG */
+  if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){const buf=await f.arrayBuffer();return{name:f.name,mime:'application/pdf',data:b64(buf),size:buf.byteLength}}
+  if(/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic)$/i.test(f.name)){
+    const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();
+    const sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+    c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(u);const url=c.toDataURL('image/jpeg',.85);return{name:f.name,mime:'image/jpeg',data:url.split(',')[1],url,size:url.length*.75}}
+  toast('รองรับเฉพาะภาพและ PDF: '+f.name);return null;
+}
 async function addFiles(list){
   for(const f of list){
     if(files.length>=MAX_FILES){toast('ใส่ได้สูงสุด 12 ไฟล์');break}
-    try{
-      if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
-        const buf=await f.arrayBuffer();files.push({name:f.name,mime:'application/pdf',data:b64(buf),size:buf.byteLength});
-      }else if(/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic)$/i.test(f.name)){
-        const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();
-        const sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
-        c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        URL.revokeObjectURL(u);const url=c.toDataURL('image/jpeg',.85);
-        files.push({name:f.name,mime:'image/jpeg',data:url.split(',')[1],url,size:url.length*.75});
-      }else toast('รองรับเฉพาะภาพและ PDF: '+f.name);
-    }catch(e){toast('เปิดไฟล์ไม่ได้: '+f.name)}
+    try{const r=await readFile(f);if(r)files.push(r)}catch(e){toast('เปิดไฟล์ไม่ได้: '+f.name)}
   }
   drawThumbs();
 }
+/* defendant's own documents (step 3): read by the AI with the draft, cited as ล.๑ ล.๒ … */
+let dfiles=[];const DMAX=8,DBYTES=10e6;
+async function addDefFiles(list){
+  for(const f of list){if(dfiles.length>=DMAX){toast('เอกสารจำเลยใส่ได้สูงสุด ๘ ไฟล์');break}
+    try{const r=await readFile(f);if(r){if(dfiles.reduce((s,x)=>s+x.size,0)+r.size>DBYTES){toast('ไฟล์รวมใหญ่เกินไป');break}dfiles.push(r)}}catch(e){toast('เปิดไฟล์ไม่ได้: '+f.name)}}
+  drawDefThumbs();
+}
+function drawDefThumbs(){const h=$('dthumbs');h.innerHTML='';
+  dfiles.forEach((f,i)=>{const d=document.createElement('div');d.className='th';
+    if(f.url){const im=document.createElement('img');im.src=f.url;im.alt='';d.append(im)}else d.textContent='📄 '+f.name;
+    const pg=document.createElement('span');pg.className='pg';pg.textContent='ล.'+toTh(i+1);
+    const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','ลบไฟล์นี้');x.onclick=()=>{dfiles.splice(i,1);drawDefThumbs()};
+    d.append(pg,x);h.append(d)})}
+$('dFileIn').onchange=e=>{addDefFiles([...e.target.files]);e.target.value=''};
+(()=>{const z=$('ddrop');['dragenter','dragover'].forEach(t=>z.addEventListener(t,e=>{e.preventDefault()}));z.addEventListener('drop',e=>{e.preventDefault();addDefFiles([...e.dataTransfer.files])})})();
 function drawThumbs(){
   const h=$('thumbs');h.innerHTML='';
   files.forEach((f,i)=>{const d=document.createElement('div');d.className='th';
@@ -292,7 +316,11 @@ $('readBtn').onclick=async()=>{
 
 /* ---------- step 3: review ---------- */
 const OPTIONS=['ปฏิเสธว่าไม่ได้เป็นหนี้หรือไม่ได้ทำตามที่ฟ้อง','รับว่าเป็นหนี้จริง แต่ยอดเงินที่ฟ้องไม่ถูกต้อง','ดอกเบี้ย ค่าปรับ หรือค่าเสียหายสูงเกินกฎหมาย','คดีขาดอายุความ','ได้ชำระหนี้ไปแล้วบางส่วนหรือทั้งหมด','ลายมือชื่อในเอกสารไม่ใช่ของจำเลย','โจทก์ไม่มีอำนาจฟ้อง','ต้องการไกล่เกลี่ยหรือขอผ่อนชำระ','คดีอาญา: ให้การปฏิเสธ','คดีอาญา: ให้การรับสารภาพ'];
-OPTIONS.forEach((o,i)=>{const l=document.createElement('label');l.className='opt';l.innerHTML='<input type="checkbox" value="'+i+'"><span></span>';l.querySelector('span').textContent=o;$('opts').append(l)});
+/* each chosen line of defence gets its own box for the details behind it */
+OPTIONS.forEach((o,i)=>{const w=document.createElement('div');w.className='optw';const l=document.createElement('label');l.className='opt';l.innerHTML='<input type="checkbox" value="'+i+'"><span></span>';l.querySelector('span').textContent=o;
+  const t=document.createElement('textarea');t.id='od'+i;t.hidden=true;t.placeholder='รายละเอียดการต่อสู้ข้อนี้ เช่น ชำระแล้วเมื่อใด เท่าใด มีหลักฐานอะไร';t.setAttribute('aria-label','รายละเอียด: '+o);
+  l.querySelector('input').addEventListener('change',e=>{t.hidden=!e.target.checked;if(e.target.checked)t.focus()});w.append(l,t);$('opts').append(w)});
+const optNotes=()=>W.opts.map(i=>{const d=($('od'+i)||{}).value||'';return OPTIONS[i]+(d.trim()?' — รายละเอียด: '+d.trim():'')});
 const FIELDS=['fCourt','fBlack','fKind','fPlaintiff','fDefendants','dAge','dNat','dOcc','dHouse','dMoo','dRoad','dSoi','dSub','dDist','dProv','dPost','dTel'];
 function fillDef(d){d=d||{};const m={dAge:d.age,dNat:d.nationality,dOcc:d.occupation,dHouse:d.houseNo,dMoo:d.moo,dRoad:d.road,dSoi:d.soi,dSub:d.subdistrict,dDist:d.district,dProv:d.province,dPost:d.postcode,dTel:d.phone};Object.keys(m).forEach(k=>$(k).value=m[k]||'')}
 function fillFromExtract(x){
@@ -311,8 +339,8 @@ function drawSummary(x){
   add('เรื่อง:',x.matter);add('ทุนทรัพย์:',x.amount);add('ข้อเท็จจริงตามคำฟ้อง',x.allegations);add('คำขอท้ายฟ้อง',x.relief);add('นัดศาล:',x.hearingDate);
   s.hidden=!s.childElementCount;
 }
-function saveForm(){W.form={};FIELDS.concat(['facts']).forEach(k=>W.form[k]=$(k).value);W.who=$('fWho').value;W.opts=[...document.querySelectorAll('#opts input:checked')].map(i=>+i.value);saveW()}
-function loadForm(){if(!W.form)return;FIELDS.concat(['facts']).forEach(k=>{if(W.form[k]!=null)$(k).value=W.form[k]});if(W.who!=null)$('fWho').value=W.who;(W.opts||[]).forEach(i=>{const c=document.querySelector('#opts input[value="'+i+'"]');if(c)c.checked=true})}
+function saveForm(){W.form={};FIELDS.concat(['facts']).concat(OPTIONS.map((o,i)=>'od'+i)).forEach(k=>W.form[k]=$(k).value);W.who=$('fWho').value;W.opts=[...document.querySelectorAll('#opts input:checked')].map(i=>+i.value);saveW()}
+function loadForm(){if(!W.form)return;FIELDS.concat(['facts']).concat(OPTIONS.map((o,i)=>'od'+i)).forEach(k=>{if(W.form[k]!=null)$(k).value=W.form[k]});if(W.who!=null)$('fWho').value=W.who;(W.opts||[]).forEach(i=>{const c=document.querySelector('#opts input[value="'+i+'"]');if(c){c.checked=true;$('od'+i).hidden=false}})}
 document.querySelector('#s3').addEventListener('input',saveForm);document.querySelector('#s3').addEventListener('change',saveForm);
 
 async function doDraft(){
@@ -320,7 +348,7 @@ async function doDraft(){
   const x=Object.assign({},W.x,{court:$('fCourt').value,blackCaseNo:$('fBlack').value,caseKind:$('fKind').value,plaintiffs:[$('fPlaintiff').value]});
   const whoSel=$('fWho').selectedOptions[0];
   try{
-    const r=await api('draft',{userId:user.userId,jobId:W.jobId,extracted:x,defendantName:whoSel?whoSel.textContent:'',options:W.opts.map(i=>OPTIONS[i]),facts:$('facts').value});
+    const r=await api('draft',{userId:user.userId,jobId:W.jobId,extracted:x,defendantName:whoSel?whoSel.textContent:'',options:optNotes(),facts:$('facts').value,files:dfiles.map(f=>({mime:f.mime,data:f.data,name:f.name}))});
     W.body=r.body;W.checklist=r.checklist||[];saveW();drawDraft();show(4);window.scrollTo({top:$('s4').offsetTop-80});
   }catch(e){$('err3').textContent=e.message;$('err3').hidden=false;if(W.step===4){show(3)}}
   finally{$('busy3').hidden=true;$('draftBtn').disabled=false;$('redraft').disabled=false}
@@ -337,7 +365,7 @@ function drawDraft(){
 }
 $('body').addEventListener('input',()=>{W.body=$('body').value;saveW()});
 $('copyBtn').onclick=async()=>{const t=$('body').value;try{await navigator.clipboard.writeText(t);toast('คัดลอกแล้ว')}catch(e){$('body').select();toast('กด Ctrl+C เพื่อคัดลอก')}};
-function restart(){W={};saveW();files=[];drawThumbs();['fCourt','fBlack','fKind','fPlaintiff','fDefendants','facts'].forEach(k=>$(k).value='');document.querySelectorAll('#opts input').forEach(c=>c.checked=false);show(2);refreshQuota();window.scrollTo(0,0)}
+function restart(){W={};saveW();files=[];drawThumbs();dfiles=[];drawDefThumbs();OPTIONS.forEach((o,i)=>{$('od'+i).value='';$('od'+i).hidden=true});['fCourt','fBlack','fKind','fPlaintiff','fDefendants','facts'].forEach(k=>$(k).value='');document.querySelectorAll('#opts input').forEach(c=>c.checked=false);show(2);refreshQuota();window.scrollTo(0,0)}
 $('restart3').onclick=restart;$('restart4').onclick=restart;
 
 /* position of each blank on แบบพิมพ์ (๑๑) (PDF จาก Word) in PDF points; L = bottom of the label's text box on that row */
