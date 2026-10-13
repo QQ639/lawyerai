@@ -858,7 +858,7 @@ const FIELDS={
     ...ADDR('s',[[1,Bx(491.3),[['house',151],['moo',247],['road',333]]],[1,Bx(514.9),[['soi',143],['sub',366]]],[1,Bx(538.5),[['dist',141],['prov',282],['post',499]]],[1,Bx(562.1),[['tel',128]]]]),
     P(T('sSign5','ลงชื่อผู้เรียง (ชื่อในวงเล็บ)',[1,363,674,'c']))]}],
  f7:[
-  {g:'หัวคำร้อง',f:[W(T('subject','เรื่อง (เช่น ขอส่งหมาย / ขอเลื่อนคดี)',[0,117,110])),...HEAD([0,339,Bx(160.5)],[[0,289,Bx(185.5)],[0,346,Bx(185.5)],[0,513,Bx(185.5)]],[0,315,Bx(210.6)]),
+  {g:'หัวคำร้อง',f:[Object.assign(FL('subject','เรื่อง ใต้คำว่า คำร้อง/คำแถลง/คำขอ (กด Enter ขึ้นบรรทัดใหม่ได้ สูงสุด ๔ บรรทัด)',[{p:0,x:117,b:110,w:150,lines:4,lp:17}]),{size:16,noInd:1,rows:3}),...HEAD([0,339,Bx(160.5)],[[0,289,Bx(185.5)],[0,346,Bx(185.5)],[0,513,Bx(185.5)]],[0,315,Bx(210.6)]),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,149,Bx(297.8)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,149,Bx(344)]))]},
   {g:'ผู้ยื่นคำร้อง',f:[W(T('xName','ข้าพเจ้า (ชื่อผู้ยื่น)',[0,208,Bx(373.3)])),T('xSt','ฐานะ (โจทก์ / จำเลย / ทนายโจทก์)',[0,544,Bx(373.3),'r']),ID('xId','เลขประจำตัวประชาชน',0,'ID7',391.5),
     ...ADDR('x',[[0,Bx(422.1),[['race',124],['nat',210],['occ',280],['bd',400],['bm',448],['by',517]]],[0,Bx(449.4),[['age',108],['house',214],['moo',305],['road',364]]],[0,Bx(470.9),[['soi',138],['sub',300],['dist',444]]],[0,Bx(495.9),[['prov',120],['post',320],['tel',427]]],[0,Bx(520.9),[['fax',123],['mail',381]]]])]},
@@ -910,8 +910,9 @@ function fieldBoxes(f,raw){
     const o2=Object.assign({},o,{size:Math.min(o.size,16)}),lh=o2.size*fs(o2)*1.4;d.slice(0,13).forEach((c,i)=>{const w=textW(c,o2);out.push(mk(f.p,f.xs[i]-w/2,topFor(f.b,o2,lh),c,{size:o2.size}))}); /* digits sized to fit the boxes */
     return{boxes:out,warn:d.length&&d.length!==13?'ควรมี ๑๓ หลัก (ตอนนี้ '+d.length+' หลัก)':''}}
   if(f.t==='flow'){
+    if(f.size&&o.size>f.size)o.size=f.size; /* small heading block beside the garuda */
     const em=' '.repeat(Math.round(72/(o.size*fs(o))));
-    const text=v.split('\n').map((p,i)=>i&&p.trim()?em+p.trim():p.trim()).join('\n');
+    const text=v.split('\n').map((p,i)=>i&&p.trim()&&!f.noInd?em+p.trim():p.trim()).join('\n');
     const w=Math.min(...f.seg.map(s=>s.w)),s0=f.seg[0];
     const lines=measureLines(text,Object.assign({},o,{w,ind:s0.ind||0,lp:s0.lp}));
     let i=0;f.seg.forEach((s,k)=>{const chunk=lines.slice(i,i+s.lines);i+=s.lines;if(!chunk.length)return;
@@ -973,7 +974,7 @@ function setupFill(){
     const grid=document.createElement('div');grid.className='fgrid';
     g.f.forEach(f=>{if(f.t==='wit'){grid.append(witUI(f));return}
       const lb=document.createElement('label');lb.className='ff'+(f.t==='flow'||f.t==='wit'||f.wide?' full':'');const sp=document.createElement('span');sp.textContent=f.l;
-      const big=f.t==='flow'||f.t==='title',inp=document.createElement(big?'textarea':'input');if(big)inp.rows=f.t==='title'?2:f.t==='flow'&&f.seg.reduce((n,s)=>n+s.lines,0)>6?8:4;if(f.t==='id')inp.inputMode='numeric';
+      const big=f.t==='flow'||f.t==='title',inp=document.createElement(big?'textarea':'input');if(big)inp.rows=f.rows||(f.t==='title'?2:(f.seg.reduce((n,s)=>n+s.lines,0)>6?8:4));if(f.t==='id')inp.inputMode='numeric';
       inp.dataset.k=f.k;let t;inp.addEventListener('input',()=>{clearTimeout(t);const v=inp.value;inp.dataset.pending=1;t=setTimeout(()=>{delete inp.dataset.pending;setField(f,v)},big?350:120)});
       inp.addEventListener('focus',()=>{const b=S.boxes.find(x=>x.fk===f.k);if(b){const e=document.querySelector('.box[data-id="'+b.id+'"]');if(e&&e.scrollIntoView)e.scrollIntoView({block:'center',behavior:'smooth'})}});
       const w=document.createElement('small');w.className='fwarn';w.hidden=true;w.dataset.w=f.k;lb.append(sp,inp,w);grid.append(lb)});
