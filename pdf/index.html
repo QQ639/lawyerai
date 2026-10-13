@@ -928,8 +928,8 @@ function fieldBoxes(f,raw){
     const e=ENDS[f.k];
     if(e&&e.on&&f.end){
       const role=e.role||'ผู้ร้อง',name=toTh((e.name||'').trim())||'.'.repeat(40),doc=e.doc||'คำร้อง',lh=o.size*fs(o)*1.4;
-      const stmt=measureLines(doc+'ฉบับนี้ ข้าพเจ้า '+name+' '+role+' เป็นผู้เรียงและพิมพ์',Object.assign({},o,{w,ind:s0.ind||72,lp:s0.lp}));
-      const items=[{c:'ควรมิควรแล้วแต่จะโปรด'},{sig:role},...stmt.map((t,i)=>({t,ind:i?0:(s0.ind||72)})),{sig:'ผู้เรียงและพิมพ์'}]; /* no blank lines between */
+      const stmt=measureLines(doc+'ฉบับนี้ ข้าพเจ้า '+name+' '+role+' เป็นผู้เรียงและพิมพ์',Object.assign({},o,{w:w-8,ind:0,lp:s0.lp})); /* centred, no indent */
+      const items=[{c:'ควรมิควรแล้วแต่จะโปรด'},{sig:role},...stmt.map(t=>({c:t.trim()})),{sig:'ผู้เรียงและพิมพ์'}]; /* no blank lines between */
       items.forEach(it=>{const sl=slots[k++];if(!sl){over++;return}const y=topFor(sl.b,o,lh);
         if(it.c)out.push(mk(sl.p,sl.x+sl.w/2-textW(it.c,o)/2,y,it.c));
         else if(it.sig){out.push(mk(sl.p,215,y,'ลงชื่อ'),mk(sl.p,Math.min(400,sl.x+sl.w-textW(it.sig,o)),y,it.sig))}
