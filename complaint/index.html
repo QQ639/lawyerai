@@ -955,7 +955,6 @@ function layout(){
   /* ---------- (๑๕) บัญชีพยาน ---------- */
   if(want('f15')){
     const wit=paras(d.wit);
-    if(wit.length>25)throw new Error('บัญชีพยานมีได้ไม่เกิน ๒๕ อันดับในแบบพิมพ์ ๒ หน้า');
     const s15=[],g=newPg(s15,'f15',0,'บัญชีพยาน (๑๕)');
     g.t(151,95.9,'โจทก์').ns().t(291,B(202.5),court,249).t(243,B(226.2),day,36).t(306,B(226.2),month,97).t(480,B(226.2),yy,47).t(268,B(249.7),KT,100)
      .t(165,B(388.9),hasL?L.wName:pAll,320).t(549,B(388.9),role,60,SIZE,'end').t(234,B(412.4),toTh(wit.length),71,SIZE,'middle')
@@ -964,6 +963,12 @@ function layout(){
     const h=newPg(s15,'f15',1,'บัญชีพยาน (๑๕)');
     h.t(430,812,'( '+signer+' )',200,SIZE,'middle').ns();
     const rows=[...[485.5,521,557,593,629,665,700.5].map(t=>({p:g,t,c:[51,92,243.5,456,531.5]})),...Array.from({length:18},(_,k)=>({p:h,t:102.5+36*k,c:[51,92,242.5,496,552.5]}))];
+    /* more than ๒๕ witnesses: the list runs on to (๑๕ ทวิ) sheets, ๓๓ more per sheet (๑๕ + ๑๘), numbering carries on */
+    for(let n=25;n<wit.length;n+=33){
+      const a=newPg(s15,'f15b',0,'บัญชีพยาน (๑๕ ทวิ)'),b=newPg(s15,'f15b',1,'บัญชีพยาน (๑๕ ทวิ)'),C=[51.2,92,255.1,461.4,538.8];
+      a.t(410.7,786,'( '+signer+' )',200,SIZE,'middle').ns();b.t(407.2,818,'( '+signer+' )',200,SIZE,'middle').ns();
+      for(let k=0;k<15;k++)rows.push({p:a,t:178.9+35.85*k,c:C});for(let k=0;k<18;k++)rows.push({p:b,t:103.2+35.86*k,c:C});
+    }
     wit.forEach((w,i)=>{const r=rows[i],c=r.c,cw=c[2]-c[1]-8;
       r.p.t((c[0]+c[1])/2,r.t+23.5,toTh(i+1)+'.',null,SIZE,'middle').ns().t((c[3]+c[4])/2,r.t+23.5,'นำ',null,SIZE,'middle').ns();
       let ls,sz;for(sz of [18,16,14,13]){ls=wrap(w,()=>cw,sz);if(ls.length<=2)break}
@@ -972,7 +977,7 @@ function layout(){
   }
 
   /* page numbers: from page ๒ of each document; the complaint set runs on from (๔) to (๕) */
-  docSets.forEach(s=>!s.noNum&&(s.pages||[]).forEach((p,i)=>{if(i)p.t(PW/2,p.form==='f40'?(p.idx===0?74:62):(p.form==='f15'||p.form==='f12'?30:48),'- '+toTh(i+1)+' -',null,SIZE,'middle').ns()}));
+  docSets.forEach(s=>!s.noNum&&(s.pages||[]).forEach((p,i)=>{if(i)p.t(PW/2,p.form==='f40'?(p.idx===0?74:62):(p.form==='f15'||p.form==='f15b'||p.form==='f12'?30:48),'- '+toTh(i+1)+' -',null,SIZE,'middle').ns()}));
   return {docSets,certifier:{name:signer,role}};
 }
 
