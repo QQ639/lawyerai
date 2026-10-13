@@ -160,6 +160,9 @@ button:disabled{opacity:.45;cursor:default}
 .wrow{display:grid;grid-template-columns:26px minmax(0,1fr) 78px 40px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
 .wrow .wn,.wrow .wa{grid-column:2/-1}.wml{grid-column:2;justify-self:end;font-size:13px;color:var(--muted)}.wno{color:var(--fg);text-align:right;font-size:15px}
 .wrow select{min-height:40px;padding:4px 6px}.wrow .wx{min-height:40px;min-width:40px;padding:0;font-size:18px}
+.fend{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--ink-soft,#f4f6fb)}
+.fchk{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--fg);cursor:pointer}.fchk input{width:20px;height:20px;margin-top:2px;flex:none}
+.fendo{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px}.fendo[hidden]{display:none}.fendo select{min-height:40px;padding:4px 8px;width:100%}
 .wadd{margin-top:6px;align-self:flex-start;min-height:38px}
 .fillMin .fill-b{display:none}
 @media (min-width:1100px){.work{display:flex;align-items:flex-start}
@@ -862,7 +865,7 @@ const FIELDS={
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,149,Bx(297.8)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,149,Bx(344)]))]},
   {g:'ผู้ยื่นคำร้อง',f:[W(T('xName','ข้าพเจ้า (ชื่อผู้ยื่น)',[0,208,Bx(373.3)])),T('xSt','ฐานะ (โจทก์ / จำเลย / ทนายโจทก์)',[0,544,Bx(373.3),'r']),ID('xId','เลขประจำตัวประชาชน',0,'ID7',391.5),
     ...ADDR('x',[[0,Bx(422.1),[['race',124],['nat',210],['occ',280],['bd',400],['bm',448],['by',517]]],[0,Bx(449.4),[['age',108],['house',214],['moo',305],['road',364]]],[0,Bx(470.9),[['soi',138],['sub',300],['dist',444]]],[0,Bx(495.9),[['prov',120],['post',320],['tel',427]]],[0,Bx(520.9),[['fax',123],['mail',381]]]])]},
-  {g:'ข้อความ',f:[FL('body7','ข้อความต่อจาก "ข้อ ๑" (ขึ้นย่อหน้าใหม่ด้วย Enter)',[{p:0,x:85,b:Bx(579.3),w:460,ind:98,lines:4,lp:33.4},{p:1,x:85,b:Bx(98.6),w:474,lines:22,lp:33.405}]),
+  {g:'ข้อความ',f:[Object.assign(FL('body7','ข้อความต่อจาก "ข้อ ๑" (ขึ้นย่อหน้าใหม่ด้วย Enter)',[{p:0,x:85,b:Bx(579.3),w:460,ind:98,lines:4,lp:33.4},{p:1,x:85,b:Bx(98.6),w:474,lines:22,lp:33.405}]),{end:{doc:'คำร้อง',role:'ผู้ร้อง',who:'xName',st:'xSt'}}),
     P(T('sign7','ลงชื่อ (ชื่อในวงเล็บ)',[0,374,805,'c']))]}],
  f9:[
   {g:'หัวใบแต่งทนาย',f:[...HEAD([0,312,174.5],[[0,258,199.9],[0,316,199.9],[0,504,199.9]],[0,286,225.5]),W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,157,256])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,157,329]))]},
@@ -877,7 +880,7 @@ const FIELDS={
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,150,Bx(303.4)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,150,Bx(349.6)]))]},
   {g:'จำเลยผู้ให้การ',f:[W(T('aName','ข้าพเจ้า (ชื่อจำเลย)',[0,183,Bx(382.3)])),ID('aId','เลขประจำตัวประชาชน',0,'ID11',398.6),
     ...ADDR('a',[[0,Bx(404.6),[['race',457]]],[0,Bx(426.9),[['nat',122],['occ',209],['age',543]]],[0,Bx(449.2),[['house',145],['moo',251],['road',313],['soi',489]]],[0,Bx(471.4),[['sub',142],['dist',311],['prov',457]]],[0,Bx(493.7),[['post',147],['tel',257]]]])]},
-  {g:'คำให้การ',f:[FL('body11','ข้อความต่อจาก "ข้อ ๑" (ขึ้นย่อหน้าใหม่ด้วย Enter)',[{p:0,x:85,b:Bx(568.9),w:488,ind:89,lines:6,lp:28.3},{p:1,x:85,b:Bx(110.1),w:496,lines:21,lp:34.25}])]}],
+  {g:'คำให้การ',f:[Object.assign(FL('body11','ข้อความต่อจาก "ข้อ ๑" (ขึ้นย่อหน้าใหม่ด้วย Enter)',[{p:0,x:85,b:Bx(568.9),w:488,ind:89,lines:6,lp:28.3},{p:1,x:85,b:Bx(110.1),w:496,lines:21,lp:34.25}]),{end:{doc:'คำให้การ',role:'จำเลย',who:'aName'}})]}],
  f12:[
   {g:'หัวหมายเรียก',f:[...HEAD([0,318,Bx(211)],[[0,272,Bx(234.6)],[0,326,Bx(234.6)],[0,496,Bx(234.6)]]).slice(0,4),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,157,Bx(286.8)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,157,Bx(330.5)])),W(T('dName','ถึง (ชื่อจำเลย)',[0,132,Bx(360.7)])),
@@ -889,7 +892,7 @@ const FIELDS={
     W(T('name15','ข้าพเจ้า (ชื่อผู้ยื่น)',[0,165,Bx(388.9)])),T('st15','ฐานะ',[0,549,Bx(388.9),'r']),T('n15','จำนวนพยาน (อันดับ)',[0,234,Bx(412.4),'c'])]},
   {g:'รายชื่อพยาน',f:[{k:'wit',l:'พยานทีละอันดับ: ชื่อ (หรือชื่อเอกสาร) ที่อยู่ไม่เกิน ๒ บรรทัดในช่อง และหมายเหตุ นำ / หมาย (หน้าแรก ๗ อันดับ หน้า ๒ อีก ๑๘)',t:'wit'},P(T('sign15','ลงชื่อ (ชื่อในวงเล็บ)',[0,437.5,792,'c'],[1,430,812,'c']))]}],
  f40:[
-  {g:'แผ่นต่อ',f:[FL('body40','ข้อความ (หน้า ๑ และหน้า ๒ หน้าละ ๒๐ บรรทัด)',[{p:0,x:88,b:98.5,w:456,lines:20,lp:672/19},{p:1,x:88,b:93.5,w:456,lines:20,lp:672/19}])]}]
+  {g:'แผ่นต่อ',f:[Object.assign(FL('body40','ข้อความ (หน้า ๑ และหน้า ๒ หน้าละ ๒๐ บรรทัด)',[{p:0,x:88,b:98.5,w:456,lines:20,lp:672/19},{p:1,x:88,b:93.5,w:456,lines:20,lp:672/19}]),{end:{doc:'คำร้อง',role:'ผู้ร้อง'}})]}]
 };
 /* witness table rows on (๑๕): row top t, columns c = [no | name | … | นำ] */
 const WIT_ROWS=[...[485.5,521,557,593,629,665,700.5].map(t=>({p:0,t,c:[51,92,243.5,456,531.5]})),...Array.from({length:18},(_,k)=>({p:1,t:102.5+36*k,c:[51,92,242.5,496,552.5]}))];
@@ -914,11 +917,25 @@ function fieldBoxes(f,raw){
     const em=' '.repeat(Math.round(72/(o.size*fs(o))));
     const text=v.split('\n').map((p,i)=>i&&p.trim()&&!f.noInd?em+p.trim():p.trim()).join('\n');
     const w=Math.min(...f.seg.map(s=>s.w)),s0=f.seg[0];
-    const lines=measureLines(text,Object.assign({},o,{w,ind:s0.ind||0,lp:s0.lp}));
-    let i=0;f.seg.forEach((s,k)=>{const chunk=lines.slice(i,i+s.lines);i+=s.lines;if(!chunk.length)return;
-      out.push(mk(s.p,s.x,topFor(s.b,o,s.lp),chunk.join('\n'),{w:s.w,ind:k?0:(s.ind||0),lp:s.lp}))});
-    const cap=f.seg.reduce((n,s)=>n+s.lines,0);
-    return{boxes:out,warn:lines.length>cap?'ยาวเกินช่อง '+(lines.length-cap)+' บรรทัด (ส่วนเกินไม่ถูกพิมพ์) ใช้แผ่นต่อ (๔๐ ก.) หรือย่อข้อความ':''}}
+    const lines=text.trim()?measureLines(text,Object.assign({},o,{w,ind:s0.ind||0,lp:s0.lp})):[];
+    /* every ruled line, page after page */
+    const slots=f.seg.flatMap(sg=>Array.from({length:sg.lines},(_,j)=>({p:sg.p,x:sg.x,w:sg.w,lp:sg.lp,b:sg.b+j*sg.lp,sg})));
+    /* body: consecutive lines on one page form one box (keeps the first-line indent and the wrapping) */
+    let k=0;while(k<lines.length&&k<slots.length){const sg=slots[k].sg;let n=0;while(k+n<lines.length&&k+n<slots.length&&slots[k+n].sg===sg)n++;
+      out.push(mk(sg.p,sg.x,topFor(slots[k].b,o,sg.lp),lines.slice(k,k+n).join('\n'),{w:sg.w,ind:k===0?(s0.ind||0):0,lp:sg.lp}));k+=n}
+    let over=Math.max(0,lines.length-slots.length);
+    /* closing block (tick box under the field): ควรมิควรแล้วแต่จะโปรด, signature, ผู้เรียงและพิมพ์ */
+    const e=ENDS[f.k];
+    if(e&&e.on&&f.end){
+      const role=e.role||'ผู้ร้อง',name=toTh((e.name||'').trim())||'.'.repeat(40),doc=e.doc||'คำร้อง',lh=o.size*fs(o)*1.4;
+      const stmt=measureLines(doc+'ฉบับนี้ ข้าพเจ้า '+name+' '+role+' เป็นผู้เรียงและพิมพ์',Object.assign({},o,{w,ind:s0.ind||72,lp:s0.lp}));
+      const items=[{c:'ควรมิควรแล้วแต่จะโปรด'},{sig:role},...stmt.map((t,i)=>({t,ind:i?0:(s0.ind||72)})),{sig:'ผู้เรียงและพิมพ์'}]; /* no blank lines between */
+      items.forEach(it=>{const sl=slots[k++];if(!sl){over++;return}const y=topFor(sl.b,o,lh);
+        if(it.c)out.push(mk(sl.p,sl.x+sl.w/2-textW(it.c,o)/2,y,it.c));
+        else if(it.sig){out.push(mk(sl.p,215,y,'ลงชื่อ'),mk(sl.p,Math.min(400,sl.x+sl.w-textW(it.sig,o)),y,it.sig))}
+        else if(it.t)out.push(mk(sl.p,sl.x+(it.ind||0),y,it.t))});
+    }
+    return{boxes:out,warn:over?'ยาวเกินช่อง '+over+' บรรทัด (ส่วนเกินไม่ถูกพิมพ์) ใช้แผ่นต่อ (๔๐ ก.) หรือย่อข้อความ':''}}
   if(f.t==='title'){const ls=v.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,3);
     if(ls.length)out.push(mk(f.p,f.x,topFor(f.b,o,f.lp),ls.join('\n'),{lp:f.lp,bg:'#ffffff',bgw:f.bgw})); /* white backing hides the printed title */
     return{boxes:out}}
@@ -938,9 +955,9 @@ function fieldBoxes(f,raw){
   return{boxes:out};
 }
 const witRows=v=>{let a;try{a=JSON.parse(v||'[]')}catch(e){a=(v||'').split('\n').map(n=>({n}))}return(Array.isArray(a)?a:[]).filter(r=>r&&((r.n||'').trim()||(r.a||'').trim()))};
-let fillMute=false;
+let fillMute=false,ENDS={};
 function setField(f,val,quiet){
-  const r=fieldBoxes(f,val);S.boxes=S.boxes.filter(b=>b.fk!==f.k);if(r.boxes.length)r.boxes[0].src=val;S.boxes.push(...r.boxes);
+  const r=fieldBoxes(f,val);S.boxes=S.boxes.filter(b=>b.fk!==f.k);if(r.boxes.length){r.boxes[0].src=val;if(ENDS[f.k])r.boxes[0].endOpt=ENDS[f.k]}S.boxes.push(...r.boxes);
   const w=document.querySelector('#fillBody [data-w="'+f.k+'"]');if(w){w.textContent=r.warn||'';w.hidden=!r.warn}
   if(f.t==='wit'&&!quiet){const nf=allFields().find(x=>x.k==='n15'),n=witRows(val).length;if(nf){setField(nf,n?String(n):'',true);const i=document.querySelector('#fillBody [data-k="n15"]');if(i)i.value=n?toTh(String(n)):''}}
   if(!quiet){fillMute=true;drawBoxes();fillMute=false;dirty();if(CARRY.test(f.k)){const m=LS.get('pdfFields',{});if(val.trim())m[f.k]=val;else delete m[f.k];LS.set('pdfFields',m)}}
@@ -948,7 +965,26 @@ function setField(f,val,quiet){
 function valueOf(k){const b=S.boxes.find(x=>x.fk===k&&x.src!=null);return b?b.src:''}
 function fillSync(){ /* boxes changed elsewhere (draft restored, import): show their values in the panel */
   if(fillMute)return;document.querySelectorAll('#fillBody [data-k]').forEach(i=>{if(document.activeElement!==i&&!i.dataset.pending)i.value=valueOf(i.dataset.k)});
+  document.querySelectorAll('#fillBody [data-end]').forEach(b=>{if(b.contains(document.activeElement))return;const x=S.boxes.find(q=>q.fk===b.dataset.end&&q.endOpt);b._load(x?x.endOpt:null)});
   document.querySelectorAll('#fillBody [data-wit]').forEach(b=>{if(!b.dataset.pending&&!b.contains(document.activeElement))b._load(valueOf(b.dataset.wit))})}
+/* closing block options for a long-text field */
+const ROLES=['ผู้ร้อง','ทนายผู้ร้อง','โจทก์','ทนายโจทก์','จำเลย','ทนายจำเลย','ผู้แถลง','ผู้ขอ'];
+function endUI(f,inp){
+  const d=f.end,box=document.createElement('div');box.className='ff full fend';box.dataset.end=f.k;
+  box.innerHTML='<label class="fchk"><input type="checkbox"> เพิ่มข้อความลงท้าย (ควรมิควรแล้วแต่จะโปรด / ลงชื่อ / ผู้เรียงและพิมพ์)</label>'+
+    '<div class="fendo"><label class="ff">เอกสาร<select data-o="doc">'+['คำร้อง','คำแถลง','คำขอ','คำให้การ','คำฟ้อง'].map(x=>'<option>'+x+'</option>').join('')+'</select></label>'+
+    '<label class="ff">ฐานะผู้ลงชื่อ<select data-o="role">'+ROLES.map(x=>'<option>'+x+'</option>').join('')+'</select></label>'+
+    '<label class="ff full">ชื่อผู้เรียงและพิมพ์<input data-o="name" placeholder="เช่น นายสมชาย ใจดี"></label></div>';
+  const cb=box.querySelector('input[type=checkbox]'),opts=box.querySelector('.fendo'),get=k=>box.querySelector('[data-o="'+k+'"]');
+  const read=()=>({on:cb.checked,doc:get('doc').value,role:get('role').value,name:get('name').value});
+  let t;const commit=()=>{opts.hidden=!cb.checked;ENDS[f.k]=read();clearTimeout(t);t=setTimeout(()=>setField(f,inp.value),150)};
+  box._load=e=>{const g=x=>{const el=document.querySelector('#fillBody [data-k="'+x+'"]');return el?el.value.trim():''};
+    e=e||{on:false,doc:d.doc,role:(d.st&&ROLES.includes(g(d.st)))?g(d.st):d.role,name:d.who?g(d.who):''};
+    cb.checked=!!e.on;get('doc').value=e.doc||d.doc;get('role').value=e.role||d.role;get('name').value=e.name||'';opts.hidden=!cb.checked;ENDS[f.k]=read()};
+  cb.addEventListener('change',()=>{if(cb.checked&&!get('name').value&&d.who){const el=document.querySelector('#fillBody [data-k="'+d.who+'"]');if(el)get('name').value=el.value.trim()}commit()});
+  box.querySelectorAll('select').forEach(x=>x.addEventListener('change',commit));get('name').addEventListener('input',commit);
+  box._load(null);return box;
+}
 /* witness list editor: one row per witness — name, address (two lines fit the column), นำ / หมาย */
 function witUI(f){
   const box=document.createElement('div');box.className='ff full';box.dataset.wit=f.k;
@@ -968,7 +1004,7 @@ function witUI(f){
   box._load('');box.append(sp,list,add,w);return box;
 }
 function setupFill(){
-  const groups=fieldsOf(),panel=$('fill'),body=$('fillBody');body.innerHTML='';
+  const groups=fieldsOf(),panel=$('fill'),body=$('fillBody');body.innerHTML='';ENDS={};
   $('editor').classList.toggle('hasFill',!!groups);panel.hidden=!groups;if(!groups)return;
   groups.forEach((g,gi)=>{const d=document.createElement('details');d.open=innerWidth>=1100||gi===0;const s=document.createElement('summary');s.textContent=g.g;d.append(s);
     const grid=document.createElement('div');grid.className='fgrid';
@@ -977,7 +1013,7 @@ function setupFill(){
       const big=f.t==='flow'||f.t==='title',inp=document.createElement(big?'textarea':'input');if(big)inp.rows=f.rows||(f.t==='title'?2:(f.seg.reduce((n,s)=>n+s.lines,0)>6?8:4));if(f.t==='id')inp.inputMode='numeric';
       inp.dataset.k=f.k;let t;inp.addEventListener('input',()=>{clearTimeout(t);const v=inp.value;inp.dataset.pending=1;t=setTimeout(()=>{delete inp.dataset.pending;setField(f,v)},big?350:120)});
       inp.addEventListener('focus',()=>{const b=S.boxes.find(x=>x.fk===f.k);if(b){const e=document.querySelector('.box[data-id="'+b.id+'"]');if(e&&e.scrollIntoView)e.scrollIntoView({block:'center',behavior:'smooth'})}});
-      const w=document.createElement('small');w.className='fwarn';w.hidden=true;w.dataset.w=f.k;lb.append(sp,inp,w);grid.append(lb)});
+      const w=document.createElement('small');w.className='fwarn';w.hidden=true;w.dataset.w=f.k;lb.append(sp,inp,w);grid.append(lb);if(f.end)grid.append(endUI(f,inp))});
     d.append(grid);body.append(d)});
   /* same case, next form: bring in court, parties and lawyer typed on the previous form */
   const m=LS.get('pdfFields',{});let n=0;allFields().forEach(f=>{if(m[f.k]&&CARRY.test(f.k)){setField(f,m[f.k],true);n++}});
