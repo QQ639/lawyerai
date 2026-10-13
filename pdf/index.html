@@ -63,6 +63,12 @@ button:disabled{opacity:.45;cursor:default}
 .lbl{font-size:12px;letter-spacing:.04em;color:var(--muted)}
 .num{font-variant-numeric:tabular-nums;min-width:3.6em;text-align:center;font-weight:500}
 .sw{width:18px;height:18px;border-radius:50%;display:inline-block;flex:none}
+.cmore{position:relative;display:inline-flex}
+.cpop{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(23,32,46,.18);padding:8px;display:grid;grid-template-columns:repeat(2,minmax(96px,1fr));gap:6px;width:max-content}
+.cpop[hidden]{display:none}.cpop button{display:flex;gap:8px;align-items:center;justify-content:flex-start;min-height:40px;font-size:14px}
+.cpop button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.cpick{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;padding:4px 6px}
+.cpick input{width:44px;height:32px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
 .big{font-size:18px;font-weight:700}
 .hint{padding:8px 16px;color:var(--muted);font-size:14px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
 .hint .msg{color:var(--ink)}
@@ -227,8 +233,16 @@ button:disabled{opacity:.45;cursor:default}
     <select id="lpSel" aria-label="ระยะบรรทัด"><option value="33">ตามเส้นแบบพิมพ์</option><option value="25">ชิด (25 pt)</option><option value="">ปกติ</option></select></div>
   <span class="sep"></span>
   <div class="grp"><span class="lbl">สี</span>
-    <button id="cBlack" data-c="#111111" aria-pressed="false" aria-label="สีดำ"><span class="sw" style="background:#111111"></span><span class="wide">ดำ</span></button>
-    <button id="cBlue" data-c="#1d3a9e" aria-pressed="true" aria-label="สีน้ำเงิน"><span class="sw" style="background:#1d3a9e"></span><span class="wide">น้ำเงิน</span></button></div>
+    <button id="cBlack" data-c="#111111" aria-pressed="true" aria-label="สีดำ"><span class="sw" style="background:#111111"></span><span class="wide">ดำ</span></button>
+    <button id="cBlue" data-c="#1d3a9e" aria-pressed="false" aria-label="สีน้ำเงิน"><span class="sw" style="background:#1d3a9e"></span><span class="wide">น้ำเงิน</span></button>
+    <span class="cmore"><button id="cMore" aria-expanded="false" aria-haspopup="true" aria-label="สีอื่น"><span class="sw" id="cMoreSw" style="background:conic-gradient(#b42318,#c2410c,#ca8a04,#15803d,#0369a1,#6d28d9,#be185d,#b42318)"></span><span class="wide">สีอื่น</span></button>
+    <span class="cpop" id="cPop" hidden role="group" aria-label="เลือกสี">
+      <button data-c="#b42318" aria-label="แดง"><span class="sw" style="background:#b42318"></span>แดง</button><button data-c="#c2410c" aria-label="ส้ม"><span class="sw" style="background:#c2410c"></span>ส้ม</button>
+      <button data-c="#15803d" aria-label="เขียว"><span class="sw" style="background:#15803d"></span>เขียว</button><button data-c="#0369a1" aria-label="ฟ้า"><span class="sw" style="background:#0369a1"></span>ฟ้า</button>
+      <button data-c="#6d28d9" aria-label="ม่วง"><span class="sw" style="background:#6d28d9"></span>ม่วง</button><button data-c="#be185d" aria-label="ชมพู"><span class="sw" style="background:#be185d"></span>ชมพู</button>
+      <button data-c="#92400e" aria-label="น้ำตาล"><span class="sw" style="background:#92400e"></span>น้ำตาล</button><button data-c="#4b5563" aria-label="เทา"><span class="sw" style="background:#4b5563"></span>เทา</button>
+      <label class="cpick">กำหนดเอง<input type="color" id="cCustom" value="#111111"></label>
+    </span></span></div>
   <span class="sep"></span>
   <button id="clearAll2" class="mob">ล้างทั้งหมด</button>
 </div>
@@ -291,7 +305,8 @@ const FORMS=[{"id": "f7", "title": "คำร้อง/คำแถลง/คำ
 <script>
 (function(){
 const $=id=>document.getElementById(id);
-const S={bytes:null,name:'',pdf:null,sizes:[],scale:1,boxes:[],sel:null,size:16,color:'#1d3a9e',font:'TH Sarabun New',bold:false,lp:null,th:false,stamp:null,nid:1,zoom:1};
+const DEF={size:19,color:'#111111',font:'TH Sarabun New'}; /* default type for every sheet: black, สารบรรณ 19 */
+const S={bytes:null,name:'',pdf:null,sizes:[],scale:1,boxes:[],sel:null,size:DEF.size,color:DEF.color,font:'TH Sarabun New',bold:false,lp:null,th:false,stamp:null,nid:1,zoom:1};
 let vpm=document.querySelector('meta[name=viewport]');if(!vpm){vpm=document.createElement('meta');vpm.name='viewport';document.head.append(vpm)}
 vpm.setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'); // lock browser zoom: the app zooms the pages itself
 ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false})); // iOS Safari ignores user-scalable=no
@@ -342,6 +357,7 @@ async function openBytes(bytes,name,meta,tpl){
   try{
     S.pdf=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
   }catch(e){console.error(e);toast('เปิดไฟล์ไม่ได้ ไฟล์อาจเสียหายหรือมีรหัสผ่าน');return}
+  S.size=DEF.size;S.color=DEF.color;S.font=DEF.font;S.bold=false;
   S.bytes=bytes;S.name=name;S.tpl=(tpl==null?null:tpl);S.lp=(tpl==null?null:33);S.boxes=[];S.sel=null;S.stamp=null;
   $('editor').classList.remove('fillMin');$('fillToggle').textContent='ซ่อน';
   $('fname').textContent=name;S.zoom=1;
@@ -451,6 +467,9 @@ function startDrag(ev,b,el){
 function syncTools(){
   $('szVal').textContent=S.size+' pt';$('lpSel').value=S.lp?String(S.lp):'';$('fontSel').value=S.font;$('bold').setAttribute('aria-pressed',S.bold);
   ['cBlack','cBlue'].forEach(i=>$(i).setAttribute('aria-pressed',$(i).dataset.c===S.color));
+  const other=!['#111111','#1d3a9e'].includes(S.color);$('cMore').setAttribute('aria-pressed',other);
+  $('cMoreSw').style.background=other?S.color:'conic-gradient(#b42318,#c2410c,#ca8a04,#15803d,#0369a1,#6d28d9,#be185d,#b42318)';
+  document.querySelectorAll('#cPop [data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===S.color));
   ['stCheck','stCross','stDate'].forEach(i=>$(i).setAttribute('aria-pressed',$(i).dataset.s===S.stamp));
   document.querySelectorAll('.layer').forEach(l=>l.classList.toggle('stamp',!!S.stamp));
   $('thNum').setAttribute('aria-pressed',S.th);
@@ -467,7 +486,15 @@ $('thNum').onclick=()=>{S.th=!S.th;LS.set('pdfThNum',S.th);syncTools();toast(S.t
 $('bold').onclick=()=>{S.bold=!S.bold;syncTools();applySel()};
 $('szDown').onclick=()=>{S.size=Math.max(6,S.size-1);syncTools();applySel()};
 $('szUp').onclick=()=>{S.size=Math.min(72,S.size+1);syncTools();applySel()};
-['cBlack','cBlue'].forEach(i=>$(i).onclick=()=>{S.color=$(i).dataset.c;syncTools();applySel()});
+['cBlack','cBlue'].forEach(i=>$(i).onclick=()=>{S.color=$(i).dataset.c;$('cPop').hidden=true;$('cMore').setAttribute('aria-expanded','false');syncTools();applySel()});
+const popSet=open=>{const pp=$('cPop');pp.hidden=!open;$('cMore').setAttribute('aria-expanded',String(open));
+  if(open){const r=$('cMore').getBoundingClientRect(),w=pp.offsetWidth;pp.style.top=(r.bottom+6)+'px';pp.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px'}};
+addEventListener('scroll',()=>{if(!$('cPop').hidden)popSet(false)},{passive:true});$('tools')&&$('tools').addEventListener('scroll',()=>popSet(false),{passive:true});
+$('cMore').onclick=e=>{e.stopPropagation();popSet($('cPop').hidden)};
+$('cPop').addEventListener('mousedown',e=>{if(e.target.tagName!=='INPUT')e.preventDefault()}); /* keep the selected text box focused */
+document.querySelectorAll('#cPop [data-c]').forEach(b=>b.onclick=()=>{S.color=b.dataset.c;popSet(false);syncTools();applySel()});
+$('cCustom').addEventListener('input',e=>{S.color=e.target.value;syncTools();applySel()});
+document.addEventListener('click',e=>{if(!$('cPop').hidden&&!e.target.closest('.cmore'))popSet(false)});
 ['stCheck','stCross','stDate'].forEach(i=>$(i).onclick=()=>{const s=$(i).dataset.s;S.stamp=S.stamp===s?null:s;syncTools()});
 const ZS=[.5,.75,1,1.25,1.5,2,2.5,3,4],ZMIN=.5,ZMAX=4;
 function setZoom(z,cx,cy){ // keep the point under (cx,cy) in place
@@ -880,7 +907,7 @@ function fieldBoxes(f,raw){
   const val=(raw||'').replace(/\s+$/,''),o=fillStyle(),out=[];if(!val.trim())return{boxes:out};
   const v=toTh(val),mk=(p,x,y,text,extra)=>Object.assign({id:S.nid++,p,x:Math.max(0,x),y,text,w:null,fk:f.k},o,extra||{});
   if(f.t==='id'){const d=[...v].filter(c=>/[0-9๐-๙]/.test(c));
-    const lh=o.size*fs(o)*1.4;d.slice(0,13).forEach((c,i)=>{const w=textW(c,o);out.push(mk(f.p,f.xs[i]-w/2,topFor(f.b,o,lh),c))});
+    const o2=Object.assign({},o,{size:Math.min(o.size,16)}),lh=o2.size*fs(o2)*1.4;d.slice(0,13).forEach((c,i)=>{const w=textW(c,o2);out.push(mk(f.p,f.xs[i]-w/2,topFor(f.b,o2,lh),c,{size:o2.size}))}); /* digits sized to fit the boxes */
     return{boxes:out,warn:d.length&&d.length!==13?'ควรมี ๑๓ หลัก (ตอนนี้ '+d.length+' หลัก)':''}}
   if(f.t==='flow'){
     const em=' '.repeat(Math.round(72/(o.size*fs(o))));
@@ -897,7 +924,7 @@ function fieldBoxes(f,raw){
   if(f.t==='wit'){const rows=witRows(v);let warn='';
     /* one cell: one line on the row's middle, or two lines at 15 pt spacing; shrink the type a little before giving up */
     const cell=(R,x0,x1,text)=>{text=(text||'').replace(/\s*\n\s*/g,' ').trim();if(!text)return;const cw=x1-x0-8;let o2,ls;
-      for(const sz of [o.size,o.size-1,o.size-2,o.size-3]){o2=Object.assign({},o,{size:sz});ls=measureLines(text,Object.assign({},o2,{w:cw,lp:15}));if(ls.length<=2)break}
+      for(const sz of [o.size,o.size-1,o.size-2,17,16,15,14].filter((v,i,a)=>v<=o.size&&a.indexOf(v)===i)){o2=Object.assign({},o,{size:sz});ls=measureLines(text,Object.assign({},o2,{w:cw,lp:15}));if(ls.length===1||(ls.length===2&&sz<=17))break}
       if(ls.length>2)warn='บางช่องยาวเกิน ๒ บรรทัด ส่วนเกินไม่ถูกพิมพ์';
       if(ls.length===1)out.push(mk(R.p,x0+4,topFor(R.t+23.5,o2,o2.size*fs(o2)*1.4),ls[0],{size:o2.size}));
       else out.push(mk(R.p,x0+4,topFor(R.t+16,o2,15),ls.slice(0,2).join('\n'),{size:o2.size,lp:15,w:cw+4}))};
