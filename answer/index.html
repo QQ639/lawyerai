@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>AI ช่วยพิมพ์คำให้การ</title>
+<link rel="icon" href="../img/favicon.png">
 <meta name="description" content="อัปโหลดคำฟ้อง แล้วให้ AI ช่วยพิมพ์ตัวอย่างคำให้การจำเลย เพื่อนำไปแก้ไขต่อและปรึกษาทนายความ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&display=swap">
@@ -75,7 +76,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 <body>
 <header class="site-head">
   <div class="wrap">
-    <a class="logo" href="/"><span class="logo-mark">AI</span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a>
+    <a class="logo" href="/"><span class="logo-mark" style="background:none;padding:0;overflow:hidden"><img src="../img/logo.jpg" alt="ทนาย Ai+" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit"></span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a>
   </div>
 </header>
 
@@ -181,12 +182,13 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>© <span id="yr"></span> ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com</span>
+    <span>© <span id="yr"></span> Q-Q สงวนลิขสิทธิ์ · ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com</span>
     <span>ไม่ใช่เว็บไซต์ของสำนักงานศาลยุติธรรม ไม่ใช่เว็บไซต์ทางการของศาล ผู้ใช้ต้องตรวจความถูกต้องของเอกสารเอง และห้ามใช้ปลอมแปลงเอกสาร</span>
   </div>
 </footer>
 <div class="toast" id="toast" hidden></div>
 
+<script src="../donate.js"></script>
 <script src="config.js"></script>
 <script>
 (function(){
@@ -338,8 +340,8 @@ $('copyBtn').onclick=async()=>{const t=$('body').value;try{await navigator.clipb
 function restart(){W={};saveW();files=[];drawThumbs();['fCourt','fBlack','fKind','fPlaintiff','fDefendants','facts'].forEach(k=>$(k).value='');document.querySelectorAll('#opts input').forEach(c=>c.checked=false);show(2);refreshQuota();window.scrollTo(0,0)}
 $('restart3').onclick=restart;$('restart4').onclick=restart;
 
-/* position of each blank on แบบพิมพ์ (๑๑) in PDF points; L = y of the dotted line */
-const Y=L=>L-24.5;
+/* position of each blank on แบบพิมพ์ (๑๑) (PDF จาก Word) in PDF points; L = bottom of the label's text box on that row */
+const Y=L=>L-21;
 function splitBlack(s){s=toAr(s||'').replace(/\s+/g,'');const m=s.match(/^(.*?)\/(\d{2,4})$/);if(!m)return[s,''];return[m[1],m[2].slice(-2)]}
 $('toForm').onclick=()=>{
   W.body=$('body').value;saveForm();
@@ -349,15 +351,16 @@ $('toForm').onclick=()=>{
   const who=$('fWho').selectedOptions[0];const whoName=who&&+who.value>=0?((W.x.defendants||[])[+who.value]||{}).name||'':'';
   const F=(x,L,text)=>({p:0,x,y:Y(L),text});
   const fields=[
-    F(416,105,T(num)),F(516,105,T(yy)),F(314,164,v('fCourt')),F(320,208,v('fKind')),
-    F(128,242,v('fPlaintiff')),F(128,308,v('fDefendants')),F(160,348,T(whoName)),
-    F(108,421,v('dNat')),F(288,421,v('dOcc')),
-    F(92,446,v('dAge')),F(186,446,v('dHouse')),F(382,446,v('dMoo')),F(431,446,v('dRoad')),
-    F(123,471,v('dSoi')),F(289,471,v('dSub')),F(452,471,v('dDist')),
-    F(104,496,v('dProv')),F(294,496,v('dPost')),F(440,496,v('dTel'))
+    F(426,111,T(num)),F(535,111,T(yy)),F(325,174.4,v('fCourt')),F(309,219,v('fKind')),
+    F(150,303.4,v('fPlaintiff')),F(150,349.6,v('fDefendants')),F(183,382.3,T(whoName)),
+    F(457,404.6,v('dNat')),F(122,426.9,v('dNat')),F(209,426.9,v('dOcc')),F(543,426.9,v('dAge')),
+    F(145,449.2,v('dHouse')),F(251,449.2,v('dMoo')),F(313,449.2,v('dRoad')),F(489,449.2,v('dSoi')),
+    F(142,471.4,v('dSub')),F(311,471.4,v('dDist')),F(457,471.4,v('dProv')),
+    F(147,493.7,v('dPost')),F(257,493.7,v('dTel'))
   ].filter(f=>f.text);
   const body=T(W.body||'').replace(/^\s*ข้อ\s*[๑1]\s*\.?\s*/,'');
-  LS.set('pdfImport',{tpl:2,lp:33,size:18,fields,flow:{text:body,first:{p:0,x:73,y:Y(584),w:476,ind:102,lines:5},next:{x:73,y:Y(107),w:476,lines:19}},ts:Date.now()});
+  /* p1: 6 ruled lines 28.3 pt apart starting after "ข้อ ๑"; p2 onward: 21 lines 34.25 pt apart */
+  LS.set('pdfImport',{tpl:2,lp:33,fields,flow:{text:body,first:{p:0,x:85,y:547.9,w:488,ind:89,lines:6,lp:28.3},next:{x:85,y:89.1,w:496,lines:21,lp:34.25}},ts:Date.now()});
   location.href='../pdf/?import=1';
 };
 

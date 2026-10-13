@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>AI ร่างหนังสือบอกกล่าวและสัญญา</title>
+<link rel="icon" href="../img/favicon.png">
 <meta name="description" content="AI อ่านเอกสาร ตรวจข้อมูล แล้วร่างหนังสือบอกกล่าวบังคับจำนอง ทวงถามเงินกู้และผู้ค้ำประกัน ทวงถามค่าแชร์ สัญญากู้ยืมเงิน สัญญาค้ำประกัน และสัญญายืมทรัพย์ พร้อมข้อควรระวัง">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Serif+Thai:wght@600;700&family=Sarabun:wght@300;400;600&display=swap">
@@ -46,6 +47,9 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 .type span{font-size:14px;color:var(--muted);line-height:1.5}
 .type i{font-style:normal;font-size:12px;font-weight:600;color:var(--ink)}
 .card{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px;background:#fbfcfe}
+.ptype{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;font-size:14px;font-weight:400}
+.ptype button{font:inherit;border:0;background:#fff;padding:6px 12px;cursor:pointer;color:inherit}
+.ptype button.on{background:var(--ink,#17202e);color:#fff}
 .card h3{margin:0 0 12px;font-size:17px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .card h3 .rm{margin-left:auto;font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 12px;min-height:36px;cursor:pointer}
 .add{font:inherit;font-size:15px;font-weight:600;color:var(--ink);background:var(--ink-soft);border:1px dashed var(--ink);border-radius:10px;min-height:44px;padding:8px 14px;cursor:pointer;margin-top:10px}
@@ -112,7 +116,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 </style>
 </head>
 <body>
-<header class="site-head"><div class="wrap"><a class="logo" href="/"><span class="logo-mark">AI</span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a></div></header>
+<header class="site-head"><div class="wrap"><a class="logo" href="/"><span class="logo-mark" style="background:none;padding:0;overflow:hidden"><img src="../img/logo.jpg" alt="ทนาย Ai+" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit"></span><span>ตัวอย่างร่างเอกสารกฎหมาย</span></a></div></header>
 
 <main class="page">
  <div class="narrow">
@@ -202,6 +206,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
       <button class="btn ghost" id="back4">กลับไปแก้ข้อมูล</button>
       <button class="btn ghost" id="restart">เริ่มงานใหม่</button>
     </div>
+    <div id="dnHost"></div>
     <div class="result">
       <div><div class="tabs" id="tabs" role="tablist"></div><div class="viewer"><div id="printArea"></div></div></div>
       <aside class="caution" id="caution"></aside>
@@ -212,6 +217,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 <footer class="site-foot"><div class="wrap"><span>© <span id="yr"></span> Q-Q สงวนลิขสิทธิ์ · ตัวอย่างร่างเอกสารกฎหมาย · lawyerthaiai.com</span><span>เอกสารที่ได้เป็นร่าง ผู้ใช้ต้องตรวจความถูกต้องเอง และห้ามใช้ปลอมแปลงเอกสาร</span></div></footer>
 <div class="toast" id="toast" hidden></div>
 
+<script src="../donate.js"></script>
 <script src="../answer/config.js"></script>
 <script>
 (function(){
@@ -256,7 +262,14 @@ const TYPES={
     fields:[F('place','สถานที่ทำสัญญา'),F('date','วันที่ทำสัญญา','date'),F('item','ทรัพย์ที่ยืม (ชนิด ยี่ห้อ รุ่น หมายเลข สภาพ มูลค่า)','textarea',null,1),
       F('returnDate','กำหนดส่งคืน','date'),F('details','ข้อตกลงอื่น','textarea',null,1)]}
 };
-const PF=[['name','ชื่อ-นามสกุล / ชื่อนิติบุคคล'],['idCard','เลขประจำตัวประชาชน'],['phone','โทรศัพท์'],['addr','ที่อยู่ (ตามทะเบียนบ้าน หรือที่ติดต่อได้)','full']];
+const PF=[['name','ชื่อ-นามสกุล (มีคำนำหน้า)'],['idCard','เลขประจำตัวประชาชน'],['phone','โทรศัพท์'],['addr','ที่อยู่ (ตามทะเบียนบ้าน หรือที่ติดต่อได้)','full']];
+/* juristic person: registration, the authorised signer and the head office address */
+const JF=[['name','ชื่อนิติบุคคล (เช่น บริษัท ตัวอย่าง จำกัด)'],['regNo','เลขทะเบียนนิติบุคคล'],['phone','โทรศัพท์'],['rep','ผู้มีอำนาจกระทำการแทน (ชื่อ-นามสกุล)'],['repPos','ตำแหน่ง (เว้นว่าง = กรรมการผู้มีอำนาจกระทำการแทน)'],['regDate','วันจดทะเบียน'],
+  ['sign','เงื่อนไขการลงชื่อ (ตามหนังสือรับรอง)','full'],['addr','ที่ตั้งสำนักงานใหญ่','full']];
+const isCo=n=>/^(บริษัท|บจก\.|บมจ\.|ห้างหุ้นส่วน|หจก\.|ห้าง|สหกรณ์|มูลนิธิ|สมาคม|ธนาคาร)/.test((n||'').trim());
+const pos=o=>(o.repPos||'').trim()||'กรรมการผู้มีอำนาจกระทำการแทน';
+/* name as typed in signatures: "บริษัท … จำกัด โดย นาย …" */
+const pName=o=>o?(o.jur&&o.rep?o.name.trim()+' โดย '+o.rep.trim():(o.name||'')):'';
 
 /* ---------- precautions (checked before sending / signing; kept as evidence for court) ---------- */
 const SEND=['ส่งทางไปรษณีย์<b>ลงทะเบียนตอบรับ (EMS/AR)</b> ไปยังภูมิลำเนาตามทะเบียนบ้านของผู้รับทุกคน และที่อยู่ที่ติดต่อได้จริง (ถ้าต่างกัน ส่งทั้งสองแห่ง)',
@@ -325,7 +338,7 @@ Object.entries(TYPES).forEach(([k,t])=>{const b=document.createElement('button')
 $('toForm').onclick=()=>{if(!W.type)return;if(W.formType!==W.type){W.form={};W.parties=null;W.formType=W.type}buildForm();show(3);window.scrollTo({top:$('s3').offsetTop-80})};
 
 /* ---------- step 3 ---------- */
-function blankParty(){const o={};PF.forEach(([k])=>o[k]='');return o}
+function blankParty(){const o={};PF.forEach(([k])=>o[k]='');JF.forEach(([k])=>o[k]=o[k]||'');o.jur='';return o}
 function buildForm(){
   const T=TYPES[W.type];$('s3title').textContent=T.name;
   if(!W.parties){W.parties={};T.parties.forEach(p=>W.parties[p.key]=p.min?[blankParty()]:[])}
@@ -349,8 +362,13 @@ function drawParties(){
   T.parties.forEach(p=>{const list=W.parties[p.key]=W.parties[p.key]||[];
     list.forEach((o,i)=>{const c=document.createElement('div');c.className='card';const h=document.createElement('h3');h.textContent=p.label+(list.length>1?' คนที่ '+toTh(i+1):'');
       if(list.length>p.min){const rm=document.createElement('button');rm.type='button';rm.className='rm';rm.textContent='ลบ';rm.onclick=()=>{list.splice(i,1);saveW();drawParties()};h.append(rm)}
+      const ty=document.createElement('span');ty.className='ptype';ty.setAttribute('role','group');ty.setAttribute('aria-label','ประเภท');
+      [['','บุคคลธรรมดา'],['1','นิติบุคคล']].forEach(([v,t])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.className=(o.jur||'')===v?'on':'';b.setAttribute('aria-pressed',(o.jur||'')===v);b.onclick=()=>{o.jur=v;saveW();drawParties()};ty.append(b)});
+      h.insertBefore(ty,h.children[0]||null);
       c.append(h);const g=document.createElement('div');g.className='grid3';
-      PF.forEach(([k,l,full])=>{const lb=document.createElement('label');lb.className='f'+(full?' full':'');lb.textContent=l;const inp=document.createElement(full?'textarea':'input');if(full)inp.rows=2;inp.value=o[k]||'';inp.oninput=()=>{o[k]=inp.value;saveW()};lb.append(inp);g.append(lb)});
+      (o.jur?JF:PF).forEach(([k,l,full])=>{const lb=document.createElement('label');lb.className='f'+(full?' full':'');lb.textContent=l;const inp=document.createElement(full?'textarea':'input');if(full)inp.rows=2;inp.value=o[k]||'';
+        inp.oninput=()=>{o[k]=inp.value;saveW()};
+        if(k==='name'&&!o.jur)inp.onchange=()=>{if(isCo(inp.value)){o.jur='1';saveW();drawParties()}};lb.append(inp);g.append(lb)});
       c.append(g);box.append(c)});
     if(p.many||!list.length){const a=document.createElement('button');a.type='button';a.className='add';a.textContent='+ เพิ่ม'+p.label.replace(/\s*\(.*\)/,'');a.onclick=()=>{list.push(blankParty());saveW();drawParties()};box.append(a)}
   });
@@ -373,7 +391,8 @@ function drawFiles(){const b=$('files');b.innerHTML='';files.forEach((f,i)=>{con
 /* data sent to the AI, with Thai labels */
 function payload(){
   const T=TYPES[W.type],o={ประเภท:T.name};
-  T.parties.forEach(p=>{const l=(W.parties[p.key]||[]).filter(x=>x.name&&x.name.trim()).map(x=>({ชื่อ:x.name,เลขประจำตัวประชาชน:x.idCard,ที่อยู่:x.addr,โทรศัพท์:x.phone}));if(l.length)o[p.label]=l});
+  T.parties.forEach(p=>{const l=(W.parties[p.key]||[]).filter(x=>x.name&&x.name.trim()).map(x=>x.jur?{ประเภท:'นิติบุคคล',ชื่อนิติบุคคล:x.name,ทะเบียนนิติบุคคลเลขที่:x.regNo||'[ระบุ]',วันจดทะเบียน:x.regDate||'',ผู้มีอำนาจกระทำการแทน:x.rep||'[ระบุ]',ตำแหน่ง:pos(x),เงื่อนไขการลงชื่อ:x.sign||'',ที่ตั้งสำนักงานใหญ่:x.addr,โทรศัพท์:x.phone}
+      :{ประเภท:'บุคคลธรรมดา',ชื่อ:x.name,เลขประจำตัวประชาชน:x.idCard,ที่อยู่:x.addr,โทรศัพท์:x.phone});if(l.length)o[p.label]=l});
   const d={};T.fields.forEach(f=>{let v=W.form[f.key];if(f.type==='date')v=thDate(v);if(v)d[f.label]=v});o.ข้อมูล=d;
   if(T.kind==='letter'){o.ผู้ส่งหนังสือ=W.sender==='self'?'เจ้าหนี้ส่งเอง':{ฐานะ:'ทนายความผู้รับมอบอำนาจ',ชื่อ:$('lName').value,สำนักงาน:$('lOffice').value};o.วันที่หนังสือ=thDate($('docDate').value)}
   return o;
@@ -420,14 +439,14 @@ function senderLines(){
   return[$('lOffice').value||$('lName').value,$('lAddr').value,$('lTel').value&&'โทร '+$('lTel').value].filter(Boolean).map(toTh);
 }
 function signer(){
-  if(W.sender==='self'){const c=(W.parties.creditor||W.parties.lender||[])[0]||{};return{name:toTh(c.name||''),title:TYPES[W.type].parties[0].label.replace(/\s*\(.*\)/,'')}}
+  if(W.sender==='self'){const c=(W.parties.creditor||W.parties.lender||[])[0]||{};return{name:toTh(pName(c)),title:(c.jur?pos(c)+' ':'')+TYPES[W.type].parties[0].label.replace(/\s*\(.*\)/,''),seal:!!c.jur}}
   const cred=((W.parties.creditor||[])[0]||{}).name;
   return{name:toTh($('lName').value),title:'ทนายความผู้รับมอบอำนาจ'+(cred?'จาก'+toTh(cred):''),lic:$('lLic').value&&'ใบอนุญาตทนายความเลขที่ '+toTh($('lLic').value)}
 }
 function partyName(label){
   const P=W.parties||{},m=label.match(/ที่\s*([๑-๙1-9])/),idx=m?Math.max(0,(TH.indexOf(m[1])>=0?TH.indexOf(m[1]):+m[1])-1):0;
   const k=/ค้ำ/.test(label)?'guarantor':/ให้กู้|ให้ยืม/.test(label)?'lender':/ผู้กู้|ผู้ยืม/.test(label)?'borrower':'';
-  return k?toTh((((P[k]||[])[idx])||{}).name||''):'';
+  return k?toTh(pName(((P[k]||[])[idx])||{})):'';
 }
 function letterHTML(d){
   const s=signer(),kv=(k,v)=>v&&v.length?'<div class="k">'+k+'</div><div>'+v+'</div>':'';
@@ -437,17 +456,17 @@ function letterHTML(d){
     '<p class="date">วันที่ '+esc(thDate($('docDate').value))+'</p>'+
     '<div class="kv">'+kv('เรื่อง',esc(strip(d.subject,'เรื่อง')))+kv('เรียน',esc(strip(d.to,'เรียน')))+kv('อ้างถึง',refs.length?olh(refs):'')+kv('สิ่งที่ส่งมาด้วย',encl.length?olh(encl):'')+'</div>'+
     (d.body||[]).map(p=>'<p class="para">'+esc(tidy(p))+'</p>').join('')+
-    '<div class="sign"><p>'+esc(tidy(d.closing||'ขอแสดงความนับถือ'))+'</p><div class="sp"></div><p>( '+esc(s.name||'                                ')+' )</p><p>'+esc(s.title)+'</p>'+(s.lic?'<p>'+esc(s.lic)+'</p>':'')+'</div>';
+    '<div class="sign"><p>'+esc(tidy(d.closing||'ขอแสดงความนับถือ'))+'</p><div class="sp"></div><p>( '+esc(s.name||'                                ')+' )</p><p>'+esc(s.title)+'</p>'+(s.lic?'<p>'+esc(s.lic)+'</p>':'')+(s.seal?'<p>(ประทับตราสำคัญ ถ้ามี)</p>':'')+'</div>';
 }
 function contractHTML(d){
   const f=W.form||{},sigs=(d.signatures||[]).map(tidy),wit=Math.max(2,+d.witnesses||2);
-  const one=(role,name)=>'<div class="one"><p>ลงชื่อ ....................................................... '+esc(role)+'</p><p>( '+esc(name||'                                                  ')+' )</p></div>';
+  const one=(role,name,seal)=>'<div class="one"><p>ลงชื่อ ....................................................... '+esc(role.replace(/\s*\(.*$/,''))+'</p><p>( '+esc(name||'                                                  ')+' )</p>'+(seal?'<p>(ประทับตราสำคัญ ถ้ามี)</p>':'')+'</div>';
   return '<h1>'+esc(tidy(d.title))+'</h1>'+
     '<p class="place">ทำที่ '+esc(toTh(f.place||'....................................................'))+'</p><p class="place">วันที่ '+esc(thDate(f.date)||'.......... เดือน .............................. พ.ศ. ............')+'</p><div class="gap"></div>'+
     (d.intro||[]).map(p=>'<p class="para">'+esc(tidy(p))+'</p>').join('')+
     (d.clauses||[]).map((c,i)=>'<p class="clause">ข้อ '+toTh(i+1)+'. '+esc(tidy(c).replace(/^ข้อ\s*[๐-๙0-9]+\.?\s*/,''))+'</p>').join('')+
     (d.ending?'<p class="para">'+esc(tidy(d.ending))+'</p>':'')+
-    '<div class="sigs">'+sigs.map(r=>one(r,partyName(r))).join('')+Array.from({length:wit},()=>one('พยาน','')).join('')+'</div>';
+    '<div class="sigs">'+sigs.map(r=>one(r,partyName(r),/บริษัท|ห้างหุ้นส่วน|นิติบุคคล|ประทับตรา/.test(r+partyName(r)))).join('')+Array.from({length:wit},()=>one('พยาน','')).join('')+'</div>';
 }
 function renderDocs(){
   const docs=W.docs||[],tabs=$('tabs'),area=$('printArea');tabs.innerHTML='';area.innerHTML='';
@@ -465,6 +484,10 @@ function drawCaution(){
   const box=$('caution'),saved=W.done||{};box.innerHTML='<h3>ข้อควรระวัง</h3><p class="status" style="margin:0 0 6px">ติ๊กเมื่อทำแล้ว เก็บหลักฐานทุกอย่างไว้ใช้ฟ้องคดี</p>';
   let n=0;const add=(t)=>{const id='c'+(n++);const l=document.createElement('label');const c=document.createElement('input');c.type='checkbox';c.checked=!!saved[id];c.onchange=()=>{W.done=W.done||{};W.done[id]=c.checked;saveW()};const s=document.createElement('span');s.innerHTML=t;l.append(c,s);box.append(l)};
   (CAUT[W.type]||[]).forEach(([h,items])=>{const sm=document.createElement('small');sm.textContent=h;box.append(sm);items.forEach(add)});
+  const J=Object.values(W.parties||{}).flat().filter(o=>o&&o.jur&&o.name);
+  if(J.length){const sm=document.createElement('small');sm.textContent='คู่กรณีเป็นนิติบุคคล';box.append(sm);
+    add('ตรวจ<b>หนังสือรับรองการจดทะเบียน</b>ฉบับล่าสุด (ออกไม่เกิน ๖ เดือน) ของ '+esc(J.map(o=>toTh(o.name)).join(', '))+' ให้ชื่อ เลขทะเบียน ที่ตั้งสำนักงานใหญ่ และผู้มีอำนาจตรงกับเอกสาร');
+    add('ผู้มีอำนาจลงชื่อ<b>ตามเงื่อนไขในหนังสือรับรอง</b> (จำนวนกรรมการที่ต้องลงชื่อร่วม) และ<b>ประทับตราสำคัญ</b> ถ้าข้อบังคับกำหนด ถ้าให้ผู้อื่นลงนามแทน ต้องมี<b>หนังสือมอบอำนาจ</b>ติดอากรแสตมป์');}
   if((W.notes||[]).length){const sm=document.createElement('small');sm.textContent='เฉพาะเรื่องนี้ (จาก AI)';box.append(sm);W.notes.forEach(t=>add(esc(t)))}
 }
 W.edited=W.edited||null;
@@ -497,6 +520,9 @@ $('wordBtn').onclick=()=>{
   const blob=new Blob(['﻿',html],{type:'application/msword'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(TYPES[W.type].name.replace(/[\s/]+/g,'_'))+'.doc';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
 };
 
+/* after print or Word download: PromptPay support panel under the buttons; its back image returns to the editable sheet */
+Donate.mount($('dnHost'),{onBack:()=>{const sh=document.querySelector('.sheet');(sh||$('s5')).scrollIntoView({behavior:'smooth',block:'start'});if(sh)setTimeout(()=>sh.focus({preventScroll:true}),400)}});
+['printBtn','wordBtn'].forEach(id=>$(id).addEventListener('click',()=>Donate.reveal($('dnHost'))));
 /* ---------- boot ---------- */
 if(!user)show(1);
 else if(W.step===5&&W.docs){buildForm();show(5);renderDocs()}
