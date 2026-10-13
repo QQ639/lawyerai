@@ -382,7 +382,7 @@ const MAX_BYTES=14e6,b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;
 $('fileIn').onchange=async e=>{
   for(const f of e.target.files){if(files.length>=10){toast('ใส่ได้สูงสุด ๑๐ ไฟล์');break}
     try{if(/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name)){files.push({name:f.name,mime:'application/pdf',data:b64(await f.arrayBuffer())})}
-      else{const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();const sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+      else{const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();const sc=Math.min(1,1500/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
         c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);
         files.push({name:f.name,mime:'image/jpeg',data:c.toDataURL('image/jpeg',.85).split(',')[1]})}}catch(err){toast('เปิดไฟล์ไม่ได้: '+f.name)}}
   e.target.value='';drawFiles()};

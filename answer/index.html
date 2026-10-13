@@ -119,7 +119,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
   <!-- step 2 -->
   <section class="panel" id="s2" hidden>
     <h2>อัปโหลดคำฟ้อง</h2>
-    <p class="hint">ถ่ายภาพทุกหน้าของคำฟ้องให้ชัด ตรง และไม่มีเงา หรือใช้ไฟล์ PDF ได้ สูงสุด 12 ไฟล์</p>
+    <p class="hint">ถ่ายภาพ<b>เฉพาะหน้าคำฟ้องและคำขอท้ายคำฟ้อง</b> ให้ชัด ตรง ไม่มีเงา หรือใช้ไฟล์ PDF ได้ สูงสุด 12 ไฟล์ <b>ไม่ต้องใส่เอกสารท้ายคำฟ้อง</b> (สัญญา ใบเสร็จ ฯลฯ) เพราะ AI ใช้แค่หน้าคำฟ้อง และค่าใช้จ่ายคิดตามจำนวนหน้า</p>
     <div class="drop" id="drop">
       <b>ลากไฟล์มาวางที่นี่</b><span>ภาพ JPG / PNG หรือ PDF</span>
       <span class="btn file-btn">เลือกไฟล์ / ถ่ายภาพ<input id="fileIn" type="file" accept="image/*,application/pdf" multiple></span>
@@ -261,7 +261,7 @@ async function readFile(f){ /* PDF as is; photos shrunk to 2000 px JPEG */
   if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){const buf=await f.arrayBuffer();return{name:f.name,mime:'application/pdf',data:b64(buf),size:buf.byteLength}}
   if(/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic)$/i.test(f.name)){
     const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();
-    const sc=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+    const sc=Math.min(1,1500/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas'); /* 1500 px: clear enough for typed court papers, ~40% fewer AI tokens than 2000 */
     c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
     URL.revokeObjectURL(u);const url=c.toDataURL('image/jpeg',.85);return{name:f.name,mime:'image/jpeg',data:url.split(',')[1],url,size:url.length*.75}}
   toast('รองรับเฉพาะภาพและ PDF: '+f.name);return null;
@@ -272,6 +272,7 @@ async function addFiles(list){
     try{const r=await readFile(f);if(r)files.push(r)}catch(e){toast('เปิดไฟล์ไม่ได้: '+f.name)}
   }
   drawThumbs();
+  if(files.length>8)toast('ใส่แค่หน้าคำฟ้องก็พอ ไม่ต้องใส่เอกสารท้ายคำฟ้อง');
 }
 /* defendant's own documents (step 3): read by the AI with the draft, cited as ล.๑ ล.๒ … */
 let dfiles=[];const DMAX=8,DBYTES=10e6;
