@@ -368,7 +368,22 @@ function admin(req) {
     const u = getUser(req.userId);
     if (u) sheet(SHEET_USERS).getRange(u._row, 11).setValue(!!req.blocked);
   }
+  /* ลบรายชื่อผู้ใช้ (ตาม userId) / ลบรายการงาน (ตาม time|jobId|stage|userId) ผู้ใช้ที่ถูกลบต้องลงทะเบียนใหม่ */
+  if (req.op === 'delUsers' || req.op === 'delJobs') {
+    const users0 = req.op === 'delUsers', want = {};
+    (req.ids || []).slice(0, 500).forEach(k => { if (k) want[String(k)] = 1; });
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const sh = sheet(users0 ? SHEET_USERS : SHEET_JOBS), n = sh.getLastRow() - 1;
+      if (n > 0) {
+        const v = sh.getRange(2, 1, n, users0 ? 1 : 5).getValues(), hit = [];
+        v.forEach((r, i) => { const key = users0 ? String(r[0]) : jobKey(r[0], r[1], r[4], r[2]); if (want[key]) hit.push(i + 2); });
+        hit.reverse().forEach(r => sh.deleteRow(r));
+      }
+    } finally { lock.releaseLock(); }
+  }
   const users = rows(SHEET_USERS, USER_HEAD), jobs = rows(SHEET_JOBS, JOB_HEAD);
+  jobs.forEach(j => j.key = jobKey(j.time, j.jobId, j.stage, j.userId));
   const day0 = new Date(); day0.setHours(0, 0, 0, 0);
   const month0 = new Date(day0.getFullYear(), day0.getMonth(), 1);
   const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract' || j.stage === 'c_start' || j.stage === 'a_start' || j.stage === 'n_check') && j.status === 'ok');
@@ -404,6 +419,7 @@ function rows(name, head) {
   const sh = sheet(name), n = sh.getLastRow() - 1; if (n <= 0) return [];
   return sh.getRange(2, 1, n, head.length).getValues().map(r => { const o = {}; head.forEach((h, i) => o[h] = r[i] instanceof Date ? r[i].toISOString() : r[i]); return o; });
 }
+function jobKey(t, jobId, stage, userId) { const d = t instanceof Date ? t : new Date(t); return [isNaN(d) ? String(t) : d.getTime(), jobId, stage, userId].join('|'); }
 function prop(k, d) { const v = PropertiesService.getScriptProperties().getProperty(k); return v == null || v === '' ? d : v; }
 function clean(s, n) { return String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n || 200); }
 function json(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }

@@ -36,6 +36,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.bad{background:#fdecea;color:#8a1c12}.pill.mid{background:#fff4e5;color:#7a4300}
 .mini{font:inherit;font-size:13px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);background:#fff;cursor:pointer}
 .err{color:#8a1c12;font-size:14px}
+.mini.del{color:#8a1c12;border-color:#f0b4ae}.bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:8px}
+th.ck,td.ck{width:34px;padding-right:0}.ck input{width:18px;height:18px;min-height:0;accent-color:var(--ink)}
 .top{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
 </style>
 </head>
@@ -73,12 +75,13 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
 
     <div class="box"><h2>ผู้ใช้งาน <span class="muted" id="uCount"></span></h2>
-      <input id="uq" placeholder="ค้นหาชื่อ เบอร์ LINE อีเมล" style="width:100%;max-width:360px">
-      <div class="tbl"><table><thead><tr><th>ลงทะเบียน</th><th>ชื่อ</th><th>โทร</th><th>LINE</th><th>อีเมล</th><th>สถานะผู้ใช้</th><th>จำนวนคดี</th><th>ใช้ล่าสุด</th><th></th></tr></thead><tbody id="users"></tbody></table></div>
+      <div class="bar"><input id="uq" placeholder="ค้นหาชื่อ เบอร์ LINE อีเมล" style="width:100%;max-width:360px"><button class="mini del" id="uDel" disabled>ลบที่เลือก</button></div>
+      <div class="tbl"><table><thead><tr><th class="ck"><input type="checkbox" id="uAll" aria-label="เลือกทั้งหมด"></th><th>ลงทะเบียน</th><th>ชื่อ</th><th>โทร</th><th>LINE</th><th>อีเมล</th><th>สถานะผู้ใช้</th><th>จำนวนคดี</th><th>ใช้ล่าสุด</th><th></th></tr></thead><tbody id="users"></tbody></table></div>
     </div>
 
     <div class="box"><h2>งานล่าสุด</h2>
-      <div class="tbl"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>ขั้นตอน</th><th>ศาล</th><th>ประเภท</th><th>เรื่อง</th><th>ไฟล์</th><th>token เข้า/ออก</th><th>ค่าใช้จ่าย (บาท)</th><th>วินาที</th><th>AI อ่าน</th><th>สถานะ</th></tr></thead><tbody id="jobs"></tbody></table></div>
+      <div class="bar"><button class="mini del" id="jDel" disabled>ลบที่เลือก</button><span class="muted" style="font-size:13px">ลบรายการงานวันนี้ จะคืนสิทธิ์ใช้งานของวันนี้ให้ผู้ใช้คนนั้นด้วย</span></div>
+      <div class="tbl"><table><thead><tr><th class="ck"><input type="checkbox" id="jAll" aria-label="เลือกทั้งหมด"></th><th>เวลา</th><th>ผู้ใช้</th><th>ขั้นตอน</th><th>ศาล</th><th>ประเภท</th><th>เรื่อง</th><th>ไฟล์</th><th>token เข้า/ออก</th><th>ค่าใช้จ่าย (บาท)</th><th>วินาที</th><th>AI อ่าน</th><th>สถานะ</th><th></th></tr></thead><tbody id="jobs"></tbody></table></div>
     </div>
   </div>
 </main>
@@ -100,6 +103,13 @@ async function load(op,extra){
   catch(e){$('loginErr').textContent=e.message;$('login').hidden=false;$('dash').hidden=true}
 }
 function cell(tr,v,cls){const td=document.createElement('td');if(cls)td.className=cls;if(v instanceof Node)td.append(v);else td.textContent=v==null?'':v;tr.append(td);return td}
+const SEL={u:new Set(),j:new Set()};
+function ck(tr,kind,id){const td=cell(tr,'','ck'),c=document.createElement('input');c.type='checkbox';c.checked=SEL[kind].has(id);c.setAttribute('aria-label','เลือก');
+  c.onchange=()=>{c.checked?SEL[kind].add(id):SEL[kind].delete(id);selUi()};td.append(c)}
+function selUi(){const su=SEL.u.size,sj=SEL.j.size;$('jAll').checked=!!DATA&&DATA.jobs.length>0&&DATA.jobs.every(j=>SEL.j.has(j.key));$('uDel').disabled=!su;$('uDel').textContent='ลบที่เลือก'+(su?' ('+n(su)+')':'');$('jDel').disabled=!sj;$('jDel').textContent='ลบที่เลือก'+(sj?' ('+n(sj)+')':'')}
+async function del(kind,ids,label){if(!ids.length)return;
+  if(!confirm(kind==='u'?'ลบรายชื่อผู้ใช้ '+label+' ?\nผู้ใช้ที่ถูกลบต้องลงทะเบียนใหม่ (ประวัติงานยังอยู่)':'ลบรายการงาน '+label+' ?\nลบแล้วกู้คืนไม่ได้'))return;
+  await load(kind==='u'?'delUsers':'delJobs',{ids});ids.forEach(i=>SEL[kind].delete(i));selUi()}
 function pill(t,c){const s=document.createElement('span');s.className='pill '+c;s.textContent=t;return s}
 function draw(){
   const s=DATA.stats,st=DATA.settings;$('updated').textContent='ข้อมูล ณ '+fmt(new Date());
@@ -108,19 +118,29 @@ function draw(){
   $('sOpen').checked=st.SERVICE_OPEN;$('sUser').value=st.LIMIT_USER_DAY;$('sTotal').value=st.LIMIT_TOTAL_DAY;$('model').textContent='ร่าง: '+st.MODEL+' · อ่านเอกสาร: '+(st.READER||'Claude');
   drawUsers();
   const jb=$('jobs');jb.innerHTML='';
-  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านเอกสาร',c_start:'ร่างฟ้อง: กรอกเอง',a_start:'คำให้การ: กรอกเอง',n_check:'หนังสือ/สัญญา: ตรวจข้อมูล',n_draft:'หนังสือ/สัญญา: ร่าง',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
+  const keep=new Set(DATA.jobs.map(j=>j.key));[...SEL.j].forEach(k=>keep.has(k)||SEL.j.delete(k));
+  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');ck(tr,'j',j.key);cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านเอกสาร',c_start:'ร่างฟ้อง: กรอกเอง',a_start:'คำให้การ: กรอกเอง',n_check:'หนังสือ/สัญญา: ตรวจข้อมูล',n_draft:'หนังสือ/สัญญา: ร่าง',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
     cell(tr,n(j.tokensIn)+' / '+n(j.tokensOut),'num');cell(tr,j.costTHB,'num');cell(tr,((+j.ms||0)/1000).toFixed(1),'num');cell(tr,j.engine==='gemini'?'Gemini':j.engine==='claude'?'Claude':'');
-    cell(tr,pill(j.status==='ok'?'สำเร็จ':j.status==='unreadable'?'อ่านไม่ออก':j.status==='fallback'?'Gemini ไม่ผ่าน → Claude':'ผิดพลาด',j.status==='ok'?'ok':j.status==='unreadable'||j.status==='fallback'?'mid':'bad')).title=j.error||'';jb.append(tr)});
+    cell(tr,pill(j.status==='ok'?'สำเร็จ':j.status==='unreadable'?'อ่านไม่ออก':j.status==='fallback'?'Gemini ไม่ผ่าน → Claude':'ผิดพลาด',j.status==='ok'?'ok':j.status==='unreadable'||j.status==='fallback'?'mid':'bad')).title=j.error||'';
+    const x=document.createElement('button');x.className='mini del';x.textContent='ลบ';x.onclick=()=>del('j',[j.key],'นี้ ('+fmt(j.time)+' '+(j.userName||'')+')');cell(tr,x);jb.append(tr)});
+  selUi();
 }
 function drawUsers(){
   const q=$('uq').value.trim().toLowerCase(),ub=$('users');ub.innerHTML='';
   const list=DATA.users.filter(u=>!q||[u.name,u.phone,u.line,u.email].join(' ').toLowerCase().includes(q));
   $('uCount').textContent='('+n(list.length)+')';
-  list.forEach(u=>{const tr=document.createElement('tr');cell(tr,fmt(u.createdAt));cell(tr,u.name);cell(tr,u.phone);cell(tr,u.line);cell(tr,u.email);cell(tr,u.role);cell(tr,n(u.jobs),'num');cell(tr,fmt(u.lastUsedAt));
+  const keep=new Set(DATA.users.map(u=>u.userId));[...SEL.u].forEach(k=>keep.has(k)||SEL.u.delete(k));
+  $('uAll').checked=list.length>0&&list.every(u=>SEL.u.has(u.userId));
+  list.forEach(u=>{const tr=document.createElement('tr');ck(tr,'u',u.userId);cell(tr,fmt(u.createdAt));cell(tr,u.name);cell(tr,u.phone);cell(tr,u.line);cell(tr,u.email);cell(tr,u.role);cell(tr,n(u.jobs),'num');cell(tr,fmt(u.lastUsedAt));
     const blocked=u.blocked===true||u.blocked==='TRUE';const b=document.createElement('button');b.className='mini';b.textContent=blocked?'ปลดระงับ':'ระงับ';
-    b.onclick=()=>load('block',{userId:u.userId,blocked:!blocked});const td=cell(tr,'');if(blocked)td.append(pill('ถูกระงับ','bad'),' ');td.append(b);ub.append(tr)});
+    b.onclick=()=>load('block',{userId:u.userId,blocked:!blocked});const td=cell(tr,'');if(blocked)td.append(pill('ถูกระงับ','bad'),' ');const x=document.createElement('button');x.className='mini del';x.textContent='ลบ';x.onclick=()=>del('u',[u.userId],u.name||'');td.append(b,' ',x);ub.append(tr)});
+  selUi();
 }
 $('uq').addEventListener('input',()=>DATA&&drawUsers());
+$('uAll').onchange=e=>{const q=$('uq').value.trim().toLowerCase();DATA.users.filter(u=>!q||[u.name,u.phone,u.line,u.email].join(' ').toLowerCase().includes(q)).forEach(u=>e.target.checked?SEL.u.add(u.userId):SEL.u.delete(u.userId));drawUsers()};
+$('jAll').onchange=e=>{DATA.jobs.forEach(j=>e.target.checked?SEL.j.add(j.key):SEL.j.delete(j.key));draw()};
+$('uDel').onclick=()=>del('u',[...SEL.u],n(SEL.u.size)+' คน');
+$('jDel').onclick=()=>del('j',[...SEL.j],n(SEL.j.size)+' รายการ');
 $('login').addEventListener('submit',e=>{e.preventDefault();pw=$('pw').value;$('loginErr').textContent='กำลังเข้าสู่ระบบ…';load()});
 $('reload').onclick=()=>load();
 $('logout').onclick=()=>{pw='';try{sessionStorage.removeItem('ansAdmin')}catch(e){}$('dash').hidden=true;$('login').hidden=false;$('pw').value='';$('loginErr').textContent=''};

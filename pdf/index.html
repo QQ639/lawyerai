@@ -165,6 +165,7 @@ button:disabled{opacity:.45;cursor:default}
 .fendo{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px}.fendo[hidden]{display:none}.fendo select{min-height:40px;padding:4px 8px;width:100%}
 .wadd{margin-top:6px;align-self:flex-start;min-height:38px}
 .fillMin .fill-b{display:none}
+.acctRow:empty{display:none}.acctRow{justify-content:flex-end}
 @media (min-width:1100px){.work{display:flex;align-items:flex-start}
  .hasFill .fill{position:sticky;top:var(--hh,120px);width:370px;flex:none;max-height:calc(100vh - var(--hh,120px) - 16px);overflow:auto;margin:4px 0 12px 16px}
  .work .pages{flex:1;min-width:0}.fillMin .fill{width:auto}}
@@ -173,6 +174,7 @@ button:disabled{opacity:.45;cursor:default}
 
 <!-- ===== start screen ===== -->
 <main class="start" id="start">
+  <div class="acctRow" data-acct></div>
   <div>
     <a class="home" id="homeLink" href="/" hidden>← เครื่องมือทั้งหมด</a>
     <h1>พิมพ์บนแบบฟอร์ม/PDF</h1>
@@ -298,6 +300,8 @@ button:disabled{opacity:.45;cursor:default}
 </div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="../answer/config.js"></script>
+<script src="../account.js" data-gate></script>
 <script src="../donate.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
@@ -841,12 +845,16 @@ const T=(k,l,...at)=>({k,l,at});           /* text at one or more spots: [page,x
 const ID=(k,l,p,xs,b)=>({k,l,t:'id',p,xs:IDS[xs],b});
 const FL=(k,l,seg)=>({k,l,t:'flow',seg});  /* long text running over ruled lines, page to page */
 const P=f=>Object.assign(f,{fmt:'p'});
+/* เลขคดีดำ / แดง: [x กึ่งกลางเลขคดี, x ปี (ต่อท้าย ๒๕), เส้นบรรทัด]; g2 = same spot on (๑๕ ทวิ) sheets added to (๑๕) */
+const CASE=(b,r,g2)=>{const L=[['caseNo','คดีหมายเลขดำที่','caseYy','ปี (คดีดำ) ๒ หลักท้าย',b,g2&&g2[0]],['redNo','คดีหมายเลขแดงที่','redYy','ปี (คดีแดง) ๒ หลักท้าย',r,g2&&g2[1]]].filter(l=>l[4]);
+  return{g:'เลขคดี (ดำ / แดง)',f:L.flatMap(([k,l,ky,ly,[x,xy,y],e])=>[Object.assign(T(k,l,[0,x,Bx(y),'c']),e?{g2:[[0,e[0],Bx(e[2]),'c']]}:{}),Object.assign(T(ky,ly,[0,xy,Bx(y)]),e?{g2:[[0,e[1],Bx(e[2])]]}:{},{mw:30})])}};
 const W=(f,w)=>Object.assign(f,{wide:1});
 const HEAD=(c,d,kd)=>[T('court','ศาล',c),T('day','วันที่',d[0]),T('month','เดือน',d[1]),T('yy','พ.ศ. (๒ หลักท้าย)',d[2]),T('kind','ความ (แพ่ง / อาญา)',kd)];
 const ADDR=(pre,rows)=>{const L={race:'เชื้อชาติ',nat:'สัญชาติ',occ:'อาชีพ',age:'อายุ (ปี)',house:'บ้านเลขที่',moo:'หมู่ที่',road:'ถนน',soi:'ตรอก/ซอย',sub:'ตำบล/แขวง',dist:'อำเภอ/เขต',prov:'จังหวัด',post:'รหัสไปรษณีย์',tel:'โทรศัพท์',fax:'โทรสาร',mail:'อีเมล',lic:'ใบอนุญาตทนายความเลขที่',area:'ภาค',bd:'เกิดวันที่',bm:'เดือนเกิด',by:'ปีเกิด พ.ศ.'};
   return rows.flatMap(([p,b,cells])=>cells.map(([k,x,mw])=>Object.assign(T(pre+k[0].toUpperCase()+k.slice(1),L[k],[p,x,b]),mw?{mw}:{})))};
 const FIELDS={
  f4:[
+  CASE([478.3,536.2,118.5]),
   {g:'หัวคำฟ้อง',f:[...HEAD([0,336,Bx(170.6)],[[0,308,Bx(195.6)],[0,370,Bx(195.6)],[0,544,Bx(195.6)]],[0,312,Bx(220.6)]),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,133,Bx(272.5)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,133,Bx(346.4)])),
     W(T('charge','ข้อหาหรือฐานความผิด',[0,362,Bx(375.8),'c'])),T('baht','จำนวนทุนทรัพย์ (บาท)',[0,140,Bx(401.1)]),T('sat','สตางค์',[0,442,Bx(401.1)])]},
@@ -866,6 +874,7 @@ const FIELDS={
     ...ADDR('s',[[1,Bx(491.3),[['house',151],['moo',247],['road',333]]],[1,Bx(514.9),[['soi',143],['sub',366]]],[1,Bx(538.5),[['dist',141],['prov',282],['post',499]]],[1,Bx(562.1),[['tel',128]]]]),
     P(T('sSign5','ลงชื่อผู้เรียง (ชื่อในวงเล็บ)',[1,363,674,'c']))]}],
  f7:[
+  CASE([479.3,524.7,110.9],[476.3,524.7,131.9]),
   {g:'หัวคำร้อง',f:[Object.assign(FL('subject','เรื่อง ใต้คำว่า คำร้อง/คำแถลง/คำขอ (กด Enter ขึ้นบรรทัดใหม่ได้ สูงสุด ๔ บรรทัด)',[{p:0,x:117,b:110,w:150,lines:4,lp:17}]),{size:16,noInd:1,rows:3}),...HEAD([0,339,Bx(160.5)],[[0,289,Bx(185.5)],[0,346,Bx(185.5)],[0,513,Bx(185.5)]],[0,315,Bx(210.6)]),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,149,Bx(297.8)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,149,Bx(344)]))]},
   {g:'ผู้ยื่นคำร้อง',f:[W(T('xName','ข้าพเจ้า (ชื่อผู้ยื่น)',[0,208,Bx(373.3)])),T('xSt','ฐานะ (โจทก์ / จำเลย / ทนายโจทก์)',[0,544,Bx(373.3),'r']),ID('xId','เลขประจำตัวประชาชน',0,'ID7',391.5),
@@ -873,6 +882,7 @@ const FIELDS={
   {g:'ข้อความ',f:[Object.assign(FL('body7','ข้อความต่อจาก "ข้อ ๑" (ขึ้นย่อหน้าใหม่ด้วย Enter)',[{p:0,x:85,b:Bx(579.3),w:460,ind:98,lines:4,lp:33.4},{p:1,x:85,b:Bx(98.6),w:474,lines:22,lp:33.405}]),{end:{doc:'คำร้อง',role:'ผู้ร้อง',who:'xName',st:'xSt'}}),
     P(T('sign7','ลงชื่อ (ชื่อในวงเล็บ)',[0,374,805,'c']))]}],
  f9:[ /* (๙) ฉบับใหม่ */
+  CASE([425.3,479.1,104.7],[425.5,479.1,128.3]),
   {g:'หัวใบแต่งทนาย',f:[...HEAD([0,290.5,160.3],[[0,240,185.6],[0,304,185.6],[0,462,185.6]],[0,264.6,211.5]).map(f=>f.k==='yy'?Object.assign(f,{pre:'๒๕'}):f),W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,137,242])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,137,315]))]},
   {g:'ผู้แต่งทนาย',f:[W(T('party9','ข้าพเจ้า (ชื่อผู้แต่งทนาย)',[0,142.5,356],[1,185.6,Bx(388.8)])),T('party9St','ฐานะ (โจทก์ / จำเลย)',[0,528.7,356,'r'],[1,533.7,Bx(388.8),'r']),
     P(T('sign9','ลงชื่อผู้แต่งทนาย (ชื่อในวงเล็บ)',[0,358.9,667.5,'c']))]},
@@ -881,21 +891,24 @@ const FIELDS={
     P(T('wSign9','ลงชื่อทนาย (ชื่อในวงเล็บ)',[0,128.7,667.5,'c'],[1,366.6,504,'c']))]},
   {g:'สำนักงานทนาย (หน้า ๒)',f:[...ADDR('o',[[1,Bx(294.4),[['house',207.7],['moo',323.9],['road',395.9]]],[1,Bx(318),[['soi',118.8],['sub',353.5]]],[1,Bx(341.6),[['dist',119.5],['prov',234.8],['post',379],['tel',474.7]]],[1,Bx(365.2),[['fax',106.5],['mail',366]]]])]}],
  f11:[
-  {g:'หัวคำให้การ',f:[T('caseNo','คดีหมายเลขดำที่',[0,426,Bx(111)]),T('caseYy','/ปี',[0,535,Bx(111)]),T('court','ศาล',[0,325,Bx(174.4)]),T('kind','ความ (แพ่ง / อาญา)',[0,309,Bx(219)]),
+  CASE([467.3,533.3,110.9],[468.3,532.9,133.1]),
+  {g:'หัวคำให้การ',f:[T('court','ศาล',[0,325,Bx(174.4)]),T('kind','ความ (แพ่ง / อาญา)',[0,309,Bx(219)]),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,150,Bx(303.4)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,150,Bx(349.6)]))]},
   {g:'จำเลยผู้ให้การ',f:[W(T('aName','ข้าพเจ้า (ชื่อจำเลย)',[0,183,Bx(382.3)])),ID('aId','เลขประจำตัวประชาชน',0,'ID11',398.6),
     ...ADDR('a',[[0,Bx(404.6),[['race',457]]],[0,Bx(426.9),[['nat',122],['occ',209],['age',543]]],[0,Bx(449.2),[['house',145],['moo',251],['road',313],['soi',489]]],[0,Bx(471.4),[['sub',142],['dist',311],['prov',457]]],[0,Bx(493.7),[['post',147],['tel',257]]]])]},
   {g:'คำให้การ',f:[Object.assign(FL('body11','ข้อความต่อจาก "ข้อ ๑" (ขึ้นย่อหน้าใหม่ด้วย Enter)',[{p:0,x:85,b:Bx(568.9),w:488,ind:89,lines:6,lp:28.3},{p:1,x:85,b:Bx(110.1),w:496,lines:21,lp:34.25}]),{end:{doc:'คำให้การ',role:'จำเลย',who:'aName'}})]}],
  f12:[
+  CASE([475.1,537,132.4],[474.8,533.7,156.1]),
   {g:'หัวหมายเรียก',f:[...HEAD([0,318,Bx(211)],[[0,272,Bx(234.6)],[0,326,Bx(234.6)],[0,496,Bx(234.6)]]).slice(0,4),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,157,Bx(286.8)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,157,Bx(330.5)])),W(T('dName','ถึง (ชื่อจำเลย)',[0,132,Bx(360.7)])),
     W(T('charge','ข้อหา / รายละเอียด',[0,327,Bx(434.3),'c'])),T('baht','ทุนทรัพย์ (บาท)',[0,258,Bx(517.1)]),T('sat','สตางค์',[0,468,Bx(517.1)]),T('yy2','พ.ศ. (ช่องล่าง)',[0,346,Bx(564.2)])]},
   {g:'ที่อยู่จำเลย (หน้า ๒)',f:[...ADDR('d',[[1,Bx(125.7),[['house',176],['moo',307],['road',378]]],[1,Bx(149.4),[['soi',139],['sub',295],['dist',456]]],[1,Bx(172.9),[['prov',120],['post',319],['tel',438]]]])]}],
  f15:[
+  CASE([448.5,511.9,146.5],[449.5,511.5,170.1],[[450.8,507,100.1],[452.6,507.3,123.7]]),
   {g:'หัวบัญชีพยาน',f:[{k:'title15',l:'ชื่อเอกสาร (เว้นว่าง = บัญชีพยาน) บรรทัดละ ๑ บรรทัด เช่น  คำร้อง ↵ ขอยื่นบัญชีระบุพยาน  หรือ  บัญชีพยานโจทก์ ↵ เพิ่มเติมครั้งที่ ๑',t:'title',p:0,x:95,b:95,lp:20,bgw:118,wide:1},...HEAD([0,291,Bx(202.5)],[[0,243,Bx(226.2)],[0,306,Bx(226.2)],[0,480,Bx(226.2)]],[0,268,Bx(249.7)]),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,128,Bx(289.1)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,128,Bx(361.8)])),
     W(T('name15','ข้าพเจ้า (ชื่อผู้ยื่น)',[0,165,Bx(388.9)])),T('st15','ฐานะ',[0,549,Bx(388.9),'r']),T('n15','จำนวนพยาน (อันดับ)',[0,234,Bx(412.4),'c'])]},
-  {g:'รายชื่อพยาน',f:[{k:'wit',l:'พยานทีละอันดับ: ชื่อ (หรือชื่อเอกสาร) ที่อยู่ไม่เกิน ๒ บรรทัดในช่อง และหมายเหตุ นำ / หมาย (หน้าแรก ๗ อันดับ หน้า ๒ อีก ๑๘ เกิน ๒๕ อันดับต่อบัญชีพยาน (๑๕ ทวิ) ให้เอง)',t:'wit',grow:1},P(T('sign15','ลงชื่อ (ชื่อในวงเล็บ)',[0,437.5,792,'c'],[1,430,812,'c']))]}],
+  {g:'รายชื่อพยาน',f:[{k:'wit',l:'พยานทีละอันดับ: ชื่อ (หรือชื่อเอกสาร) ที่อยู่ไม่เกิน ๒ บรรทัดในช่อง และหมายเหตุ นำ / หมาย (หน้าแรก ๗ อันดับ หน้า ๒ อีก ๑๘ เกิน ๒๕ อันดับต่อบัญชีพยาน (๑๕ ทวิ) ให้เอง)',t:'wit',grow:1},Object.assign(P(T('sign15','ลงชื่อ (ชื่อในวงเล็บ)',[0,437.5,792,'c'],[1,430,812,'c'])),{g2:[[0,410.7,786,'c'],[1,407.2,818,'c']]})]}],
  f6:[
   {g:'บทมาตรา',f:[FL('law6','ต่อจาก "ข้าพเจ้าถือว่าเป็นความผิดต่อกฎหมาย และบทมาตราดังนี้ คือ" (ไม่เกิน ๔ บรรทัด)',[{p:0,x:85,b:Bx(170.9),w:474,ind:177,lines:4,lp:35.4}])]},
   {g:'คำขอส่วนแพ่ง',f:[FL('c1','คำขอข้อ ๑',[{p:0,x:85,b:Bx(377.4),w:474,ind:83,lines:2,lp:35.4}]),FL('c2','คำขอข้อ ๒',[{p:0,x:85,b:Bx(448.2),w:474,ind:83,lines:2,lp:35.4}]),
@@ -908,9 +921,11 @@ const FIELDS={
     ...ADDR('s',[[1,Bx(413),[['house',147],['moo',284],['road',365]]],[1,Bx(436.6),[['soi',139],['sub',369]]],[1,Bx(460.2),[['dist',140],['prov',302],['post',496]]],[1,Bx(483.8),[['tel',128]]]]),
     P(T('sSign6','ลงชื่อผู้เรียง (ชื่อในวงเล็บ)',[1,366,596,'c']))]}],
  f19:[
+  CASE([460.6,525.7,104.5],[463.8,525.7,132.5]),
   {g:'หัวหมายนัด',f:[...HEAD([0,309,Bx(190.9)],[[0,260,Bx(214.6)],[0,318,Bx(214.6)],[0,503,Bx(214.6)]]).slice(0,4),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,140,Bx(266.8)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,140,Bx(330.8)])),W(T('dName','หมายถึง (ชื่อจำเลย)',[0,112,Bx(375.4)]))]}],
  f10:[
+  CASE([473.1,532.7,135.1],[476.2,532.7,159.3]),
   {g:'หัวใบมอบฉันทะ',f:[...HEAD([0,318.5,Bx(196.8)],[[0,269.5,Bx(221.5)],[0,334.7,Bx(221.5)],[0,541,Bx(221.5)]],[0,299,Bx(246.4)]),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,150.8,Bx(286.6)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,150.8,Bx(330.6)]))]},
   {g:'ผู้มอบฉันทะ / ผู้รับมอบฉันทะ',f:[W(T('g10Name','ข้าพเจ้า (ผู้มอบฉันทะ)',[0,192.7,Bx(361)])),{k:'g10Id',l:'เลขประจำตัวประชาชนผู้มอบ',t:'id',p:0,xs:IDS.ID10,b:379.4},
@@ -918,11 +933,13 @@ const FIELDS={
     ...ADDR('r',[[0,Bx(458.2),[['house',150.7],['moo',288.9],['road',368.3]]],[0,Bx(481.8),[['soi',143.2],['sub',368.3]]],[0,Bx(505.4),[['dist',147.8],['prov',313.7],['post',504.9]]],[0,Bx(528.8),[['tel',127.6],['fax',277.6],['mail',476.8]]]]),
     FL('task10','กิจการที่มอบฉันทะ (เช่น ยื่นคำร้อง / รับสำเนาคำสั่ง / ขอคัดถ่ายเอกสาร)',[{p:0,x:85,b:Bx(605.6),w:487,lines:3,lp:35.45}])]}],
  f13:[
-  {g:'หัวหมายเรียก',f:[T('caseNo','คดีหมายเลขดำที่',[0,455.7,Bx(146.7)]),T('caseYy','/ปี',[0,546,Bx(146.7)]),...HEAD([0,336.5,Bx(224.5)],[[0,294,Bx(248.1)],[0,354,Bx(248.1)],[0,521,Bx(248.1)]]).slice(0,4),
+  CASE([481.7,531.9,146.7],[482.7,531.5,170.3]),
+  {g:'หัวหมายเรียก',f:[...HEAD([0,336.5,Bx(224.5)],[[0,294,Bx(248.1)],[0,354,Bx(248.1)],[0,521,Bx(248.1)]]).slice(0,4),
     W(T('plaintiff','โจทก์ (ช่องระหว่าง)',[0,129,Bx(311)])),W(T('defendant','จำเลย (ช่องระหว่าง)',[0,129,Bx(362)])),W(T('dName','หมายถึง (ชื่อจำเลย)',[0,102,Bx(392.4)]))]},
   {g:'ที่อยู่จำเลย (หน้า ๒)',f:[...ADDR('d',[[1,Bx(107.3),[['house',148],['moo',278.5],['road',368]]],[1,Bx(130.9),[['soi',111],['sub',290],['dist',469]]],[1,Bx(154.5),[['prov',91],['post',294],['tel',413.5]]]])]}],
  f15b:[
-  {g:'บัญชีพยาน (๑๕ ทวิ) แผ่นต่อ',f:[T('caseNo','คดีหมายเลขดำที่',[0,420,Bx(100.1)]),T('caseYy','/ปี',[0,508,Bx(100.1)]),
+  CASE([450.8,507,100.1],[452.6,507.3,123.7]),
+  {g:'บัญชีพยาน (๑๕ ทวิ) แผ่นต่อ',f:[
     {k:'wit15b',l:'พยานทีละอันดับ: ชื่อ ที่อยู่ไม่เกิน ๒ บรรทัดในช่อง และหมายเหตุ นำ / หมาย (หน้าแรก ๑๕ อันดับ หน้า ๒ อีก ๑๘)',t:'wit',rows:'W15B',start:26},
     P(T('sign15b','ลงชื่อผู้ระบุ (ชื่อในวงเล็บ)',[0,410.7,786,'c'],[1,407.2,818,'c']))]}],
  f40:[
@@ -945,7 +962,7 @@ async function witPages(sets){
 const W15B=[...Array.from({length:15},(_,k)=>({p:0,t:178.9+35.85*k,c:[51.2,92,255.1,461.4,538.8]})),...Array.from({length:18},(_,k)=>({p:1,t:103.2+35.86*k,c:[51.2,92,255.1,461.4,538.8]}))];
 const WIT_ROWS=[...[485.5,521,557,593,629,665,700.5].map(t=>({p:0,t,c:[51,92,243.5,456,531.5]})),...Array.from({length:18},(_,k)=>({p:1,t:102.5+36*k,c:[51,92,242.5,496,552.5]}))];
 /* keys that carry over between forms of the same case (not the date) */
-const CARRY=/^(court|kind|plaintiff|defendant|charge|baht|sat|caseNo|caseYy|[pdw][A-Z].*)$/;
+const CARRY=/^(court|kind|plaintiff|defendant|charge|baht|sat|caseNo|caseYy|redNo|redYy|[pdw][A-Z].*)$/;
 
 const fillStyle=()=>({size:S.size,font:S.font,bold:false,color:S.color});
 /* the PDF export draws each line centred in its line box (canvas "middle"); Sarabun's baseline sits 0.3216 em below that */
@@ -1001,7 +1018,7 @@ function fieldBoxes(f,raw){
   const text=f.fmt==='p'?'( '+v+' )':(f.pre||'')+v;let tw=textW(text,o);
   if(f.mw&&tw>f.mw){o.size=Math.max(12,Math.floor(o.size*f.mw/tw));tw=textW(text,o)} /* narrow blank: smaller type */
   const lh=o.size*fs(o)*1.4;
-  const at=f.k==='sign15'?f.at.concat(...Array.from({length:extraSets()},(_,j)=>[[2+2*j,410.7,786,'c'],[3+2*j,407.2,818,'c']])):f.at;
+  const at=f.g2?f.at.concat(...Array.from({length:extraSets()},(_,j)=>f.g2.map(([p,...r])=>[p+2+2*j,...r]))):f.at;
   at.forEach(([p,x,b,a])=>out.push(mk(p,a==='c'?x-tw/2:a==='r'?x-tw:x,topFor(b,o,lh),text)));
   return{boxes:out};
 }
@@ -1048,7 +1065,7 @@ function witUI(f){
   const st=()=>stIn?(parseInt(stIn.value.replace(/[๐-๙]/g,c=>'๐๑๒๓๔๕๖๗๘๙'.indexOf(c)))||f.start):1;
   const read=()=>{const r=[...list.children].map(r=>({n:r.querySelector('.wn').value,a:r.querySelector('.wa').value,m:r.querySelector('.wm').value}));return stIn?{s:st(),r}:r};
   let t;const commit=()=>{num();clearTimeout(t);const v=JSON.stringify(read());box.dataset.pending=1;t=setTimeout(async()=>{
-    if(f.grow){const need=setsFor(witRows(v).length);if(need!==extraSets()){await witPages(need);const sg=allFields().find(x=>x.k==='sign15');if(sg&&valueOf('sign15'))setField(sg,valueOf('sign15'),true)}}
+    if(f.grow){const need=setsFor(witRows(v).length);if(need!==extraSets()){await witPages(need);allFields().filter(x=>x.g2&&valueOf(x.k)).forEach(x=>setField(x,valueOf(x.k),true))}}
     delete box.dataset.pending;setField(f,v)},300)};
   const num=()=>[...list.children].forEach((r,i)=>r.querySelector('.wno').textContent=toTh(String(st()+i))+'.');
   const row=d=>{d=d||{};const r=document.createElement('div');r.className='wrow';
