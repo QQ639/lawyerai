@@ -65,13 +65,20 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
       </div>
     </div>
 
+    <div class="box"><h2>ทดสอบเทียบ Gemini กับ Claude (อ่านเอกสาร)</h2>
+      <p class="muted" style="margin:0 0 8px">เลือกไฟล์คำฟ้องหรือเอกสารจริง ระบบให้ทั้งสองตัวอ่านแล้วแสดงช่องที่ต่างกัน ไม่นับโควตาผู้ใช้ แต่เสียค่า AI ทั้งสองตัว</p>
+      <div class="set"><label>เอกสาร<select id="cmpKind"><option value="answer">คำฟ้อง (สำหรับคำให้การ)</option><option value="civil">สัญญากู้ (ฟ้องมโนสาเร่)</option><option value="general">เอกสารฟ้องแพ่งทั่วไป</option><option value="criminal">หลักฐานคดีอาญา</option></select></label>
+        <input type="file" id="cmpFiles" accept="image/*,application/pdf" multiple><button class="btn primary" id="cmpBtn">เทียบ</button><span class="muted" id="cmpMsg"></span></div>
+      <div id="cmpOut"></div>
+    </div>
+
     <div class="box"><h2>ผู้ใช้งาน <span class="muted" id="uCount"></span></h2>
       <input id="uq" placeholder="ค้นหาชื่อ เบอร์ LINE อีเมล" style="width:100%;max-width:360px">
       <div class="tbl"><table><thead><tr><th>ลงทะเบียน</th><th>ชื่อ</th><th>โทร</th><th>LINE</th><th>อีเมล</th><th>สถานะผู้ใช้</th><th>จำนวนคดี</th><th>ใช้ล่าสุด</th><th></th></tr></thead><tbody id="users"></tbody></table></div>
     </div>
 
     <div class="box"><h2>งานล่าสุด</h2>
-      <div class="tbl"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>ขั้นตอน</th><th>ศาล</th><th>ประเภท</th><th>เรื่อง</th><th>ไฟล์</th><th>token เข้า/ออก</th><th>ค่าใช้จ่าย (บาท)</th><th>วินาที</th><th>สถานะ</th></tr></thead><tbody id="jobs"></tbody></table></div>
+      <div class="tbl"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>ขั้นตอน</th><th>ศาล</th><th>ประเภท</th><th>เรื่อง</th><th>ไฟล์</th><th>token เข้า/ออก</th><th>ค่าใช้จ่าย (บาท)</th><th>วินาที</th><th>AI อ่าน</th><th>สถานะ</th></tr></thead><tbody id="jobs"></tbody></table></div>
     </div>
   </div>
 </main>
@@ -98,12 +105,12 @@ function draw(){
   const s=DATA.stats,st=DATA.settings;$('updated').textContent='ข้อมูล ณ '+fmt(new Date());
   const T=[['ผู้ใช้ทั้งหมด',n(s.users)],['ผู้ใช้ใหม่วันนี้',n(s.usersToday)],['คดีทั้งหมด',n(s.cases)],['คดีวันนี้',n(s.casesToday)],['ร่างคำให้การสำเร็จ',n(s.drafts)],['ผิดพลาด',n(s.errors)],['ค่า AI เดือนนี้ (บาท)',n(s.costMonth)],['ค่า AI รวม (บาท)',n(s.costAll)]];
   $('tiles').innerHTML='';T.forEach(([l,v])=>{const d=document.createElement('div');d.className='tile2';const b=document.createElement('b');b.textContent=v;const sp=document.createElement('span');sp.textContent=l;d.append(b,sp);$('tiles').append(d)});
-  $('sOpen').checked=st.SERVICE_OPEN;$('sUser').value=st.LIMIT_USER_DAY;$('sTotal').value=st.LIMIT_TOTAL_DAY;$('model').textContent='โมเดล: '+st.MODEL;
+  $('sOpen').checked=st.SERVICE_OPEN;$('sUser').value=st.LIMIT_USER_DAY;$('sTotal').value=st.LIMIT_TOTAL_DAY;$('model').textContent='ร่าง: '+st.MODEL+' · อ่านเอกสาร: '+(st.READER||'Claude');
   drawUsers();
   const jb=$('jobs');jb.innerHTML='';
-  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านเอกสาร',c_start:'ร่างฟ้อง: กรอกเอง',n_check:'หนังสือ/สัญญา: ตรวจข้อมูล',n_draft:'หนังสือ/สัญญา: ร่าง',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
-    cell(tr,n(j.tokensIn)+' / '+n(j.tokensOut),'num');cell(tr,j.costTHB,'num');cell(tr,((+j.ms||0)/1000).toFixed(1),'num');
-    cell(tr,pill(j.status==='ok'?'สำเร็จ':j.status==='unreadable'?'อ่านไม่ออก':'ผิดพลาด',j.status==='ok'?'ok':j.status==='unreadable'?'mid':'bad')).title=j.error||'';jb.append(tr)});
+  DATA.jobs.forEach(j=>{const tr=document.createElement('tr');cell(tr,fmt(j.time));cell(tr,j.userName);cell(tr,({extract:'อ่านคำฟ้อง',draft:'ร่างคำให้การ',c_extract:'ร่างฟ้อง: อ่านเอกสาร',c_start:'ร่างฟ้อง: กรอกเอง',a_start:'คำให้การ: กรอกเอง',n_check:'หนังสือ/สัญญา: ตรวจข้อมูล',n_draft:'หนังสือ/สัญญา: ร่าง',c_draft:'ร่างฟ้อง: ร่างคำฟ้อง'})[j.stage]||j.stage);cell(tr,j.court);cell(tr,j.caseType);cell(tr,j.matter);cell(tr,j.files||'','num');
+    cell(tr,n(j.tokensIn)+' / '+n(j.tokensOut),'num');cell(tr,j.costTHB,'num');cell(tr,((+j.ms||0)/1000).toFixed(1),'num');cell(tr,j.engine==='gemini'?'Gemini':j.engine==='claude'?'Claude':'');
+    cell(tr,pill(j.status==='ok'?'สำเร็จ':j.status==='unreadable'?'อ่านไม่ออก':j.status==='fallback'?'Gemini ไม่ผ่าน → Claude':'ผิดพลาด',j.status==='ok'?'ok':j.status==='unreadable'||j.status==='fallback'?'mid':'bad')).title=j.error||'';jb.append(tr)});
 }
 function drawUsers(){
   const q=$('uq').value.trim().toLowerCase(),ub=$('users');ub.innerHTML='';
@@ -118,6 +125,27 @@ $('login').addEventListener('submit',e=>{e.preventDefault();pw=$('pw').value;$('
 $('reload').onclick=()=>load();
 $('logout').onclick=()=>{pw='';try{sessionStorage.removeItem('ansAdmin')}catch(e){}$('dash').hidden=true;$('login').hidden=false;$('pw').value='';$('loginErr').textContent=''};
 $('saveSet').onclick=()=>load('settings',{settings:{SERVICE_OPEN:$('sOpen').checked,LIMIT_USER_DAY:+$('sUser').value,LIMIT_TOTAL_DAY:+$('sTotal').value}});
+/* ---------- Gemini vs Claude ---------- */
+const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+async function readF(f){if(/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name))return{mime:'application/pdf',data:b64(await f.arrayBuffer())};
+  const img=new Image(),u=URL.createObjectURL(f);img.src=u;await img.decode();const sc=Math.min(1,1500/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
+  c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);
+  return{mime:'image/jpeg',data:c.toDataURL('image/jpeg',.85).split(',')[1]}}
+const flat=(o,p,out)=>{out=out||{};if(Array.isArray(o))o.forEach((v,i)=>flat(v,p+'['+(i+1)+']',out));else if(o&&typeof o==='object')Object.keys(o).forEach(k=>flat(o[k],p?p+'.'+k:k,out));else out[p]=o==null?'':String(o);return out};
+const norm=v=>String(v||'').replace(/[๐-๙]/g,c=>'๐๑๒๓๔๕๖๗๘๙'.indexOf(c)).replace(/\s+/g,' ').trim();
+$('cmpBtn').onclick=async()=>{const fs=[...$('cmpFiles').files];if(!fs.length){$('cmpMsg').textContent='เลือกไฟล์ก่อน';return}
+  $('cmpBtn').disabled=true;$('cmpMsg').textContent='กำลังให้ทั้งสองตัวอ่าน… ประมาณ 30–90 วินาที';$('cmpOut').innerHTML='';
+  try{const r=await call('compare',{kind:$('cmpKind').value,files:await Promise.all(fs.map(readF))});
+    const G=r.gemini,C=r.claude,box=$('cmpOut');
+    const sum=(t,x)=>{const d=document.createElement('p');d.textContent=t+': '+(x.ok?('token '+n(x.usage.input_tokens)+' / '+n(x.usage.output_tokens)+' · '+x.costTHB+' บาท · '+(x.ms/1000).toFixed(1)+' วิ'+(x.badIds&&x.badIds.length?' · เลขบัตรไม่ผ่านการตรวจ '+x.badIds.length:'')+(x.data?'':' · ตอบไม่เป็น JSON')):'ผิดพลาด '+x.error);box.append(d)};
+    sum('Gemini ('+r.model+')',G);sum('Claude',C);
+    const a=flat(G.data||{},''),b=flat(C.data||{},''),keys=[...new Set([...Object.keys(b),...Object.keys(a)])];
+    const diff=keys.filter(k=>norm(a[k])!==norm(b[k]));
+    const h=document.createElement('p');h.innerHTML='<b>ตรงกัน '+(keys.length-diff.length)+' ช่อง · ต่างกัน '+diff.length+' ช่อง</b>';box.append(h);
+    if(diff.length){const t=document.createElement('div');t.className='tbl';const tb=document.createElement('table');tb.innerHTML='<thead><tr><th>ช่อง</th><th>Gemini</th><th>Claude</th></tr></thead>';const bd=document.createElement('tbody');
+      diff.forEach(k=>{const tr=document.createElement('tr');cell(tr,k);cell(tr,a[k]==null?'(ไม่มี)':a[k]);cell(tr,b[k]==null?'(ไม่มี)':b[k]);bd.append(tr)});tb.append(bd);t.append(tb);box.append(t)}
+    $('cmpMsg').textContent='เสร็จแล้ว';
+  }catch(e){$('cmpMsg').textContent=e.message}finally{$('cmpBtn').disabled=false}};
 if(pw)load();
 })();
 </script>

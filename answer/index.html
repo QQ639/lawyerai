@@ -41,6 +41,9 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 .check{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.55;padding:10px 0}
 .check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--ink)}
 .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tabs{display:flex;gap:6px;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;margin:0 0 16px}
+.tab{flex:1;font:inherit;font-size:15px;font-weight:600;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(23,32,46,.12)}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;line-height:1.45;cursor:pointer;background:#fff}
 .opt input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--ink)}
 .optw{display:flex;flex-direction:column;gap:6px}.optw textarea{min-height:64px;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}
@@ -95,7 +98,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
   </div>
   <span class="trial" id="trial">ช่วงทดลองใช้</span>
 
-  <div class="steps" id="steps"><span data-s="1">๑ ลงทะเบียน</span><span data-s="2">๒ อัปโหลดคำฟ้อง</span><span data-s="3">๓ ตรวจข้อมูล</span><span data-s="4">๔ แก้ไขคำให้การ</span></div>
+  <div class="steps" id="steps"><span data-s="1">๑ ลงทะเบียน</span><span data-s="2">๒ คำฟ้อง</span><span data-s="3">๓ ตรวจข้อมูล</span><span data-s="4">๔ แก้ไขคำให้การ</span></div>
 
   <!-- step 1 -->
   <section class="panel" id="s1" hidden>
@@ -118,7 +121,9 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 
   <!-- step 2 -->
   <section class="panel" id="s2" hidden>
-    <h2>อัปโหลดคำฟ้อง</h2>
+    <h2>คำฟ้องของโจทก์</h2>
+    <div class="tabs" role="tablist"><button class="tab on" type="button" id="tabUp" role="tab" aria-selected="true">อัปโหลดคำฟ้อง</button><button class="tab" type="button" id="tabMan" role="tab" aria-selected="false">กรอกเอง (ไม่ต้องอัปโหลด)</button></div>
+    <div id="paneUp">
     <p class="hint">ถ่ายภาพ<b>เฉพาะหน้าคำฟ้องและคำขอท้ายคำฟ้อง</b> ให้ชัด ตรง ไม่มีเงา หรือใช้ไฟล์ PDF ได้ สูงสุด 12 ไฟล์ <b>ไม่ต้องใส่เอกสารท้ายคำฟ้อง</b> (สัญญา ใบเสร็จ ฯลฯ) เพราะ AI ใช้แค่หน้าคำฟ้อง และค่าใช้จ่ายคิดตามจำนวนหน้า</p>
     <div class="drop" id="drop">
       <b>ลากไฟล์มาวางที่นี่</b><span>ภาพ JPG / PNG หรือ PDF</span>
@@ -127,12 +132,30 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
     <div class="thumbs" id="thumbs"></div>
     <div class="row"><button class="btn primary" id="readBtn" disabled>ให้ AI อ่านคำฟ้อง</button><span class="status" id="quota"></span></div>
     <div class="busy" id="busy2" hidden><span class="spin"></span><span id="busy2t">AI กำลังอ่านคำฟ้อง ใช้เวลาประมาณ 20–60 วินาที</span></div>
+    </div>
+    <div id="paneMan" hidden>
+      <p class="hint">สรุปคำฟ้องเองโดยไม่ต้องอัปโหลด ถูกกว่าเพราะไม่ต้องให้ AI อ่านภาพ แต่ยิ่งสรุปละเอียด คำให้การยิ่งตอบได้ครบทุกข้อกล่าวหา</p>
+      <div class="grid2">
+        <label class="f">ศาล<input id="mCourt" placeholder="เช่น ศาลจังหวัดสมุทรปราการ"></label>
+        <label class="f">คดีหมายเลขดำที่<input id="mBlack" placeholder="เช่น ผบ.๑๒๓๔/๒๕๖๙"></label>
+        <label class="f">ความ (ประเภทคดี)<select id="mKind"><option>แพ่ง</option><option>อาญา</option><option>ผู้บริโภค</option><option>แรงงาน</option></select></label>
+        <label class="f">ข้อหา / เรื่อง<input id="mMatter" placeholder="เช่น ผิดสัญญากู้ยืมเงิน"></label>
+        <label class="f full">โจทก์ (หลายคนคั่นด้วย , )<input id="mPlaintiff" placeholder="เช่น นายสมชาย ใจดี"></label>
+        <label class="f full">จำเลย (บรรทัดละ ๑ คน ตามลำดับจำเลยที่ ๑, ๒ …)<textarea id="mDefs" rows="2" placeholder="นายสมศักดิ์ ทดลองดี"></textarea></label>
+        <label class="f">ทุนทรัพย์ / จำนวนเงินที่ฟ้อง<input id="mAmount" placeholder="เช่น ๒๐๘,๖๘๔.๙๓ บาท"></label>
+        <label class="f">วันนัด (ถ้ามี)<input id="mHearing" placeholder="เช่น ๑๕ ธันวาคม ๒๕๖๙ เวลา ๐๙.๐๐ น."></label>
+        <label class="f full">สรุปคำฟ้อง: โจทก์กล่าวหาว่าอย่างไร (บรรทัดละ ๑ ข้อ)<textarea id="mAllege" rows="6" placeholder="เช่น&#10;จำเลยกู้เงินโจทก์ ๑๕๐,๐๐๐ บาท เมื่อวันที่ ๑ มีนาคม ๒๕๖๗ ดอกเบี้ยร้อยละ ๑๕ ต่อปี&#10;ครบกำหนดแล้วจำเลยไม่ชำระ โจทก์ทวงถามแล้ว&#10;คิดยอดหนี้ถึงวันฟ้อง ๒๐๘,๖๘๔.๙๓ บาท"></textarea></label>
+        <label class="f full">คำขอท้ายคำฟ้อง (ถ้าทราบ บรรทัดละ ๑ ข้อ)<textarea id="mRelief" rows="3" placeholder="เช่น ให้จำเลยชำระเงิน ๒๐๘,๖๘๔.๙๓ บาท พร้อมดอกเบี้ย"></textarea></label>
+      </div>
+      <div class="row"><button class="btn primary" id="manBtn">ถัดไป: ใส่ข้อต่อสู้</button><span class="status" id="quota2"></span></div>
+      <div class="busy" id="busyM" hidden><span class="spin"></span><span>กำลังเริ่มคดี…</span></div>
+    </div>
     <div class="err" id="err2" hidden></div>
   </section>
 
   <!-- step 3 -->
   <section class="panel" id="s3" hidden>
-    <h2>ตรวจข้อมูลที่ AI อ่านได้</h2>
+    <h2 id="s3h">ตรวจข้อมูลที่ AI อ่านได้</h2>
     <p class="hint">แก้ให้ถูกต้องก่อน ข้อมูลส่วนนี้จะลงในแบบพิมพ์ (๑๑)</p>
     <div class="summary" id="summary"></div>
     <div class="grid2">
@@ -198,6 +221,7 @@ label.f input:focus-visible,label.f select:focus-visible,label.f textarea:focus-
 </footer>
 <div class="toast" id="toast" hidden></div>
 
+<script src="../account.js"></script>
 <script src="../donate.js"></script>
 <script src="config.js"></script>
 <script>
@@ -235,7 +259,7 @@ async function refreshQuota(){
   if(!user)return;
   try{const st=await api('status',{userId:user.userId});
     if(!st.open){$('quota').textContent='ระบบปิดให้บริการชั่วคราว';$('readBtn').disabled=true;return}
-    $('quota').textContent='วันนี้ใช้ได้อีก '+toTh(st.leftToday)+' คดี';
+    $('quota').textContent='วันนี้ใช้ได้อีก '+toTh(st.leftToday)+' คดี';$('quota2').textContent=$('quota').textContent;
     if(!st.registered){show(1)}
   }catch(e){$('quota').textContent=''}
 }
@@ -306,6 +330,26 @@ const drop=$('drop');
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,()=>drop.classList.remove('over')));
 drop.addEventListener('drop',e=>{e.preventDefault();addFiles([...e.dataTransfer.files])});
 
+/* ---------- step 2 (กรอกเอง): the user summarises the complaint; no AI reading, only a job number and quota ---------- */
+const MAN=['mCourt','mBlack','mKind','mMatter','mPlaintiff','mDefs','mAmount','mHearing','mAllege','mRelief'];
+function setTab(man){$('tabUp').classList.toggle('on',!man);$('tabMan').classList.toggle('on',man);$('tabUp').setAttribute('aria-selected',!man);$('tabMan').setAttribute('aria-selected',man);
+  $('paneUp').hidden=man;$('paneMan').hidden=!man;$('err2').hidden=true;LS.set('answerTab',man?'man':'up')}
+$('tabUp').onclick=()=>setTab(false);$('tabMan').onclick=()=>setTab(true);
+(()=>{const d=LS.get('answerMan',{});MAN.forEach(k=>{if(d[k]!=null)$(k).value=d[k]});MAN.forEach(k=>$(k).addEventListener('input',()=>{const o={};MAN.forEach(x=>o[x]=$(x).value);LS.set('answerMan',o)}));
+  if(LS.get('answerTab','up')==='man')setTab(true)})();
+const lines=k=>$(k).value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+$('manBtn').onclick=async()=>{
+  const defs=lines('mDefs'),miss=[];if(!$('mPlaintiff').value.trim())miss.push('โจทก์');if(!defs.length)miss.push('จำเลย');if(!$('mAllege').value.trim())miss.push('สรุปคำฟ้อง');
+  if(miss.length){$('err2').textContent='กรุณากรอก: '+miss.join(', ');$('err2').hidden=false;return}
+  $('err2').hidden=true;$('busyM').hidden=false;$('manBtn').disabled=true;
+  const x={court:$('mCourt').value.trim(),blackCaseNo:$('mBlack').value.trim(),caseKind:$('mKind').value,matter:$('mMatter').value.trim(),amount:$('mAmount').value.trim(),
+    plaintiffs:$('mPlaintiff').value.split(/\s*,\s*/).filter(Boolean),defendants:defs.map((name,i)=>({name,order:defs.length>1?'จำเลยที่ '+toTh(i+1):'จำเลย'})),
+    allegations:lines('mAllege'),relief:lines('mRelief'),attachments:[],hearingDate:$('mHearing').value.trim(),manual:true};
+  try{const r=await api('aStart',{userId:user.userId,court:x.court,caseKind:x.caseKind,matter:x.matter});
+    W={step:3,jobId:r.jobId,x};fillFromExtract(x);saveW();show(3);window.scrollTo({top:$('s3').offsetTop-80})}
+  catch(e){$('err2').textContent=e.message;$('err2').hidden=false}
+  finally{$('busyM').hidden=true;$('manBtn').disabled=false;refreshQuota()}
+};
 $('readBtn').onclick=async()=>{
   $('err2').hidden=true;$('busy2').hidden=false;$('readBtn').disabled=true;
   try{
@@ -325,6 +369,7 @@ const optNotes=()=>W.opts.map(i=>{const d=($('od'+i)||{}).value||'';return OPTIO
 const FIELDS=['fCourt','fBlack','fKind','fPlaintiff','fDefendants','dAge','dNat','dOcc','dHouse','dMoo','dRoad','dSoi','dSub','dDist','dProv','dPost','dTel'];
 function fillDef(d){d=d||{};const m={dAge:d.age,dNat:d.nationality,dOcc:d.occupation,dHouse:d.houseNo,dMoo:d.moo,dRoad:d.road,dSoi:d.soi,dSub:d.subdistrict,dDist:d.district,dProv:d.province,dPost:d.postcode,dTel:d.phone};Object.keys(m).forEach(k=>$(k).value=m[k]||'')}
 function fillFromExtract(x){
+  $('s3h').textContent=x.manual?'ตรวจข้อมูลคดี แล้วใส่ข้อต่อสู้':'ตรวจข้อมูลที่ AI อ่านได้';
   $('fCourt').value=x.court||'';$('fBlack').value=x.blackCaseNo||'';$('fKind').value=x.caseKind||'';
   $('fPlaintiff').value=(x.plaintiffs||[]).join(', ');
   const defs=x.defendants||[];$('fDefendants').value=defs.map(d=>d.name).filter(Boolean).join(', ');
@@ -366,7 +411,7 @@ function drawDraft(){
 }
 $('body').addEventListener('input',()=>{W.body=$('body').value;saveW()});
 $('copyBtn').onclick=async()=>{const t=$('body').value;try{await navigator.clipboard.writeText(t);toast('คัดลอกแล้ว')}catch(e){$('body').select();toast('กด Ctrl+C เพื่อคัดลอก')}};
-function restart(){W={};saveW();files=[];drawThumbs();dfiles=[];drawDefThumbs();OPTIONS.forEach((o,i)=>{$('od'+i).value='';$('od'+i).hidden=true});['fCourt','fBlack','fKind','fPlaintiff','fDefendants','facts'].forEach(k=>$(k).value='');document.querySelectorAll('#opts input').forEach(c=>c.checked=false);show(2);refreshQuota();window.scrollTo(0,0)}
+function restart(){W={};saveW();files=[];drawThumbs();MAN.forEach(k=>{if($(k).tagName!=='SELECT')$(k).value=''});LS.del('answerMan');dfiles=[];drawDefThumbs();OPTIONS.forEach((o,i)=>{$('od'+i).value='';$('od'+i).hidden=true});['fCourt','fBlack','fKind','fPlaintiff','fDefendants','facts'].forEach(k=>$(k).value='');document.querySelectorAll('#opts input').forEach(c=>c.checked=false);show(2);refreshQuota();window.scrollTo(0,0)}
 $('restart3').onclick=restart;$('restart4').onclick=restart;
 
 /* position of each blank on แบบพิมพ์ (๑๑) (PDF จาก Word) in PDF points; L = bottom of the label's text box on that row */
@@ -405,6 +450,7 @@ if(!API&&!MOCK){$('trial').textContent='ระบบยังไม่ได้�
 function mock(action,p){return new Promise(res=>setTimeout(()=>{
   if(action==='status')res({ok:true,open:true,registered:true,leftToday:3});
   else if(action==='register')res({ok:true});
+  else if(action==='aStart')res({ok:true,jobId:'demoM'});
   else if(action==='extract')res({ok:true,jobId:'demo',data:{court:'ศาลจังหวัดสมุทรปราการ',blackCaseNo:'ผบ.1234/2569',caseKind:'แพ่ง',matter:'ผิดสัญญากู้ยืมเงิน',amount:'85,000 บาท',plaintiffs:['บริษัท ตัวอย่าง ลิสซิ่ง จำกัด'],defendants:[{name:'นายตัวอย่าง ทดสอบ',order:'จำเลยที่ ๑',age:'45',nationality:'ไทย',occupation:'รับจ้าง',houseNo:'99/1',moo:'3',road:'สุขุมวิท',soi:'',subdistrict:'บางเมือง',district:'เมืองสมุทรปราการ',province:'สมุทรปราการ',postcode:'10270'}],allegations:['จำเลยทำสัญญากู้ยืมเงินกับโจทก์ 60,000 บาท เมื่อวันที่ 1 มีนาคม 2566','จำเลยผิดนัดชำระตั้งแต่งวดที่ 12','โจทก์บอกกล่าวทวงถามแล้ว จำเลยเพิกเฉย'],relief:['ให้จำเลยชำระเงิน 85,000 บาท พร้อมดอกเบี้ยร้อยละ 5 ต่อปี'],hearingDate:'15 ธันวาคม 2569'}});
   else if(action==='draft')res({ok:true,body:'จำเลยขอปฏิเสธฟ้องของโจทก์ทั้งสิ้น เว้นแต่ที่จะให้การรับไว้โดยชัดแจ้งต่อไปนี้\nข้อ ๒. จำเลยรับว่าได้ทำสัญญากู้ยืมเงินกับโจทก์จริง เป็นเงิน ๖๐,๐๐๐ บาท แต่จำเลยได้ชำระหนี้ให้แก่โจทก์ไปแล้วรวม [ระบุจำนวนงวด] งวด เป็นเงินรวม [ระบุจำนวนเงิน] บาท ยอดหนี้ตามฟ้องจึงไม่ถูกต้อง\nข้อ ๓. ดอกเบี้ยและค่าปรับที่โจทก์คิดคำนวณสูงเกินกว่าที่กฎหมายกำหนด จำเลยไม่ต้องรับผิดในส่วนที่เกิน\nข้อ ๔. ด้วยเหตุดังกล่าวข้างต้น จำเลยจึงขอศาลได้โปรดพิพากษายกฟ้องโจทก์ และให้โจทก์เป็นผู้ชำระค่าฤชาธรรมเนียมและค่าทนายความแทนจำเลย',checklist:['เติมจำนวนงวดและจำนวนเงินที่ชำระแล้ว','แนบหลักฐานการโอนเงิน','ตรวจอัตราดอกเบี้ยตามสัญญา']});
 },action==='status'?50:900))}

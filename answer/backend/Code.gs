@@ -15,6 +15,11 @@
  *   PRICE_OUT_MTOK   = 15     ราคา USD ต่อ 1 ล้าน token ขาออก
  *   USD_THB          = 36
  *   C_EFFORT         = medium  ระดับการคิดของ AI ตอนร่างฟ้อง (low / medium / high) ยิ่งสูงยิ่งช้าและแพง
+ *   GEMINI_API_KEY   = key จาก aistudio.google.com/apikey (บัญชีแบบเสียเงิน) ถ้าใส่ ขั้น "อ่านเอกสาร" จะใช้ Gemini ซึ่งถูกกว่ามาก
+ *   GEMINI_MODEL     = gemini-3.5-flash-lite
+ *   EXTRACT_ENGINE   = gemini | claude   (ไม่ตั้ง = ใช้ gemini เมื่อมี GEMINI_API_KEY) Gemini อ่านไม่ได้หรือเลขบัตรผิด จะส่งให้ Claude อ่านซ้ำเอง
+ *   GEMINI_PRICE_IN  = 0.30   GEMINI_PRICE_OUT = 2.50   (USD ต่อ 1 ล้าน token ใช้ประมาณค่าใช้จ่าย)
+ * งานร่างเอกสารทุกชนิดยังใช้ Claude เสมอ
  *
  * ความเป็นส่วนตัว: ระบบนี้ "ไม่เก็บ" ไฟล์คำฟ้อง ชื่อคู่ความ หรือข้อความคำให้การ
  * เก็บเฉพาะข้อมูลผู้ใช้งาน (ที่ผู้ใช้กรอกเอง) และข้อมูลสถิติของงาน (ศาล ประเภทคดี จำนวนหน้า token เวลา)
@@ -23,7 +28,7 @@
 const SHEET_USERS = 'users';
 const SHEET_JOBS = 'jobs';
 const USER_HEAD = ['userId', 'createdAt', 'name', 'phone', 'line', 'email', 'role', 'consentAt', 'jobs', 'lastUsedAt', 'blocked'];
-const JOB_HEAD = ['time', 'jobId', 'userId', 'userName', 'stage', 'files', 'court', 'caseType', 'matter', 'tokensIn', 'tokensOut', 'costTHB', 'ms', 'status', 'error'];
+const JOB_HEAD = ['time', 'jobId', 'userId', 'userName', 'stage', 'files', 'court', 'caseType', 'matter', 'tokensIn', 'tokensOut', 'costTHB', 'ms', 'status', 'error', 'engine'];
 
 /* ---------- run once from the editor ---------- */
 function setup() {
@@ -54,6 +59,7 @@ function doPost(e) {
       case 'extract': return json(extract(req));
       case 'draft': return json(draft(req));
       case 'cStart': return json(cStart(req));
+      case 'aStart': return json(aStart(req));
       case 'cExtract': return json(cExtract(req));
       case 'cDraft': return json(cDraft(req));
       case 'nCheck': return json(nCheck(req));
@@ -111,7 +117,7 @@ function todayCounts(userId) {
   const take = Math.min(n, 3000); // recent rows are enough for a daily count
   const rows = sh.getRange(sh.getLastRow() - take + 1, 1, take, 14).getValues();
   let user = 0, total = 0;
-  rows.forEach(r => { if ((r[4] === 'extract' || r[4] === 'c_extract' || r[4] === 'c_start' || r[4] === 'n_check') && r[13] === 'ok' && new Date(r[0]) >= start) { total++; if (r[2] === userId) user++; } });
+  rows.forEach(r => { if ((r[4] === 'extract' || r[4] === 'c_extract' || r[4] === 'c_start' || r[4] === 'a_start' || r[4] === 'n_check') && r[13] === 'ok' && new Date(r[0]) >= start) { total++; if (r[2] === userId) user++; } });
   return { user, total };
 }
 
@@ -159,8 +165,7 @@ function extract(req) {
   content.push({ type: 'text', text: EXTRACT_PROMPT });
   let res, data;
   try {
-    res = callClaude([{ role: 'user', content }], 3000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น');
-    data = parseJson(res.text);
+    ({ res, data } = readJson(content, 8000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น', 'low', { jobId, userId: req.userId, stage: 'extract', files: files.length })); /* long complaints need room; extraction needs no long thinking */
   } catch (err) {
     logJob(jobId, req.userId, 'extract', files.length, {}, res, Date.now() - t0, 'error', String(err.message || err));
     return { ok: false, error: 'AI อ่านเอกสารไม่สำเร็จ ลองใหม่อีกครั้ง หรือถ่ายภาพให้ชัดขึ้น' };
@@ -257,12 +262,69 @@ function parseJson(t) {
   return JSON.parse(t.slice(a, b + 1));
 }
 
+/* ---------- Gemini (งานอ่านเอกสาร) ---------- */
+function callGemini(content, maxTokens, system) {
+  const key = prop('GEMINI_API_KEY', '');
+  if (!key) throw new Error('ยังไม่ได้ตั้ง GEMINI_API_KEY');
+  const parts = (typeof content === 'string' ? [{ type: 'text', text: content }] : content).map(c => c.type === 'text'
+    ? { text: c.text } : { inline_data: { mime_type: c.source.media_type, data: c.source.data } });
+  const r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + prop('GEMINI_MODEL', 'gemini-3.5-flash-lite') + ':generateContent', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true, headers: { 'x-goog-api-key': key },
+    payload: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0, responseMimeType: 'application/json' } })
+  });
+  const code = r.getResponseCode(), body = JSON.parse(r.getContentText() || '{}');
+  if (code !== 200) throw new Error('Gemini ' + code + ': ' + (body.error && body.error.message || ''));
+  const c = (body.candidates || [])[0] || {}, um = body.usageMetadata || {};
+  const text = ((c.content || {}).parts || []).map(p => p.text || '').join('');
+  return { text, engine: 'gemini', finish: c.finishReason || '',
+    usage: { input_tokens: um.promptTokenCount || 0, output_tokens: (um.candidatesTokenCount || 0) + (um.thoughtsTokenCount || 0) } };
+}
+
+/* เลขประจำตัวประชาชน ๑๓ หลัก: หลักสุดท้ายเป็นเลขตรวจสอบ ถ้าไม่ผ่าน แปลว่าอ่านผิด */
+function badThaiIds(o) {
+  const bad = [];
+  (function walk(v, k) {
+    if (Array.isArray(v)) return v.forEach(x => walk(x, ''));
+    if (v && typeof v === 'object') return Object.keys(v).forEach(kk => walk(v[kk], kk));
+    if (k === 'idCard' && v) {
+      const d = String(v).replace(/[๐-๙]/g, c => '๐๑๒๓๔๕๖๗๘๙'.indexOf(c)).replace(/\D/g, '');
+      if (d.length !== 13) return;
+      let sum = 0; for (let i = 0; i < 12; i++) sum += +d[i] * (13 - i);
+      if ((11 - sum % 11) % 10 !== +d[12]) bad.push(d);
+    }
+  })(o, '');
+  return bad;
+}
+
+/* อ่านเอกสาร: ใช้ Gemini ก่อน (ถูกกว่า) ถ้าตอบผิดรูปแบบ ถูกตัด หรือเลขบัตรไม่ผ่านการตรวจ ให้ Claude อ่านซ้ำ
+   logInfo = {jobId, userId, stage, files, meta} ใช้บันทึกครั้งที่ Gemini ไม่ผ่าน */
+function readJson(content, maxTokens, system, effort, logInfo) {
+  const useGemini = (prop('EXTRACT_ENGINE', '') || (prop('GEMINI_API_KEY', '') ? 'gemini' : 'claude')) === 'gemini';
+  if (useGemini) {
+    const t0 = Date.now(); let res, why = '';
+    try {
+      res = callGemini(content, maxTokens, system);
+      const data = parseJson(res.text);
+      if (!data) why = 'ตอบไม่เป็น JSON' + (res.finish === 'MAX_TOKENS' ? ' (ถูกตัด)' : '');
+      else { const bad = badThaiIds(data); if (bad.length) why = 'เลขบัตรไม่ผ่านการตรวจ ' + bad.length + ' รายการ'; else return { res, data }; }
+    } catch (err) { why = String(err.message || err); }
+    if (logInfo) logJob(logInfo.jobId, logInfo.userId, logInfo.stage, logInfo.files, logInfo.meta || {}, res, Date.now() - t0, 'fallback', 'Gemini: ' + why);
+  }
+  const res = callClaude([{ role: 'user', content }], maxTokens, system, effort);
+  return { res, data: parseJson(res.text) };
+}
+
 /* ---------- logging (no party names, no document text) ---------- */
 function logJob(jobId, userId, stage, files, x, res, ms, status, error) {
   const u = getUser(userId) || {};
   const inT = res && res.usage ? (res.usage.input_tokens || 0) : 0, outT = res && res.usage ? (res.usage.output_tokens || 0) : 0;
-  const cost = (inT * +prop('PRICE_IN_MTOK', '3') + outT * +prop('PRICE_OUT_MTOK', '15')) / 1e6 * +prop('USD_THB', '36');
-  sheet(SHEET_JOBS).appendRow([new Date(), jobId || '', userId || '', u.name || '', stage, files, clean(x.court, 80), clean(x.caseKind, 30), clean(x.matter, 80), inT, outT, Math.round(cost * 100) / 100, ms, status, clean(error, 200)]);
+  const engine = res && res.engine || (res ? 'claude' : '');
+  const pin = engine === 'gemini' ? +prop('GEMINI_PRICE_IN', '0.30') : +prop('PRICE_IN_MTOK', '3'), pout = engine === 'gemini' ? +prop('GEMINI_PRICE_OUT', '2.50') : +prop('PRICE_OUT_MTOK', '15');
+  const cost = (inT * pin + outT * pout) / 1e6 * +prop('USD_THB', '36');
+  const sh = sheet(SHEET_JOBS);
+  if (sh.getRange(1, 16).getValue() !== 'engine') sh.getRange(1, 16).setValue('engine').setFontWeight('bold');
+  sh.appendRow([new Date(), jobId || '', userId || '', u.name || '', stage, files, clean(x.court, 80), clean(x.caseKind, 30), clean(x.matter, 80), inT, outT, Math.round(cost * 100) / 100, ms, status, clean(error, 200), engine]);
 }
 
 function bumpUser(userId) {
@@ -281,6 +343,27 @@ function admin(req) {
     if (s.LIMIT_USER_DAY > 0) p.setProperty('LIMIT_USER_DAY', String(Math.floor(s.LIMIT_USER_DAY)));
     if (s.LIMIT_TOTAL_DAY > 0) p.setProperty('LIMIT_TOTAL_DAY', String(Math.floor(s.LIMIT_TOTAL_DAY)));
   }
+  /* ทดสอบเทียบ: ให้ Gemini และ Claude อ่านไฟล์ชุดเดียวกัน ไม่นับโควตา ไม่บันทึกเนื้อหา */
+  if (req.op === 'compare') {
+    const files = (req.files || []).slice(0, 12);
+    if (!files.length) return { ok: false, error: 'ยังไม่มีไฟล์' };
+    const content = [];
+    files.forEach((f, i) => {
+      content.push({ type: 'text', text: 'ไฟล์ที่ ' + (i + 1) });
+      content.push(f.mime === 'application/pdf'
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: f.data } }
+        : { type: 'image', source: { type: 'base64', media_type: f.mime, data: f.data } });
+    });
+    content.push({ type: 'text', text: req.kind === 'civil' ? C_EXTRACT_PROMPT : req.kind === 'general' ? G_EXTRACT_PROMPT : req.kind === 'criminal' ? X_EXTRACT_PROMPT : EXTRACT_PROMPT });
+    const run = fn => { const t0 = Date.now(); try { const r = fn(); let d = null; try { d = parseJson(r.text); } catch (e) {}
+      const cost = r.engine === 'gemini' ? (r.usage.input_tokens * +prop('GEMINI_PRICE_IN', '0.30') + r.usage.output_tokens * +prop('GEMINI_PRICE_OUT', '2.50'))
+        : (r.usage.input_tokens * +prop('PRICE_IN_MTOK', '3') + r.usage.output_tokens * +prop('PRICE_OUT_MTOK', '15'));
+      return { ok: true, data: d, raw: d ? '' : clean(r.text, 3000), usage: r.usage, costTHB: Math.round(cost / 1e6 * +prop('USD_THB', '36') * 100) / 100, ms: Date.now() - t0, badIds: d ? badThaiIds(d) : [] };
+    } catch (err) { return { ok: false, error: String(err.message || err), ms: Date.now() - t0 }; } };
+    return { ok: true, model: prop('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
+      gemini: run(() => callGemini(content, 8000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น')),
+      claude: run(() => callClaude([{ role: 'user', content }], 8000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น', 'low')) };
+  }
   if (req.op === 'block' && req.userId) {
     const u = getUser(req.userId);
     if (u) sheet(SHEET_USERS).getRange(u._row, 11).setValue(!!req.blocked);
@@ -288,11 +371,12 @@ function admin(req) {
   const users = rows(SHEET_USERS, USER_HEAD), jobs = rows(SHEET_JOBS, JOB_HEAD);
   const day0 = new Date(); day0.setHours(0, 0, 0, 0);
   const month0 = new Date(day0.getFullYear(), day0.getMonth(), 1);
-  const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract' || j.stage === 'c_start' || j.stage === 'n_check') && j.status === 'ok');
+  const ext = jobs.filter(j => (j.stage === 'extract' || j.stage === 'c_extract' || j.stage === 'c_start' || j.stage === 'a_start' || j.stage === 'n_check') && j.status === 'ok');
   const sum = (a, k) => Math.round(a.reduce((s, j) => s + (+j[k] || 0), 0) * 100) / 100;
   return {
     ok: true,
-    settings: { SERVICE_OPEN: prop('SERVICE_OPEN', 'true') === 'true', LIMIT_USER_DAY: +prop('LIMIT_USER_DAY', '3'), LIMIT_TOTAL_DAY: +prop('LIMIT_TOTAL_DAY', '50'), MODEL: prop('MODEL', '') },
+    settings: { SERVICE_OPEN: prop('SERVICE_OPEN', 'true') === 'true', LIMIT_USER_DAY: +prop('LIMIT_USER_DAY', '3'), LIMIT_TOTAL_DAY: +prop('LIMIT_TOTAL_DAY', '50'), MODEL: prop('MODEL', ''),
+      READER: (prop('EXTRACT_ENGINE', '') || (prop('GEMINI_API_KEY', '') ? 'gemini' : 'claude')) === 'gemini' ? 'Gemini ' + prop('GEMINI_MODEL', 'gemini-3.5-flash-lite') : 'Claude' },
     stats: {
       users: users.length,
       usersToday: users.filter(u => new Date(u.createdAt) >= day0).length,
@@ -378,8 +462,7 @@ function cExtract(req) {
   const meta = crim ? { court: '', caseKind: 'อาญา', matter: 'ฟ้องคดีอาญา' } : { court: '', caseKind: 'แพ่ง', matter: gen ? 'ฟ้องคดีแพ่งสามัญ' : 'ฟ้องผิดสัญญากู้ยืมเงิน' };
   let res, data;
   try {
-    res = callClaude([{ role: 'user', content }], 6000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น', 'low');
-    data = parseJson(res.text);
+    ({ res, data } = readJson(content, 6000, 'ตอบเป็น JSON ที่ถูกต้องเท่านั้น', 'low', { jobId, userId: req.userId, stage: 'c_extract', files: files.length, meta }));
   } catch (err) {
     logJob(jobId, req.userId, 'c_extract', files.length, meta, res, Date.now() - t0, 'error', String(err.message || err));
     return { ok: false, error: 'AI อ่านเอกสารไม่สำเร็จ ลองใหม่อีกครั้ง หรือถ่ายภาพให้ชัดขึ้น' };
@@ -389,6 +472,16 @@ function cExtract(req) {
   if (!ok) return { ok: false, error: (data && data.reason) || 'อ่านเอกสารไม่ได้' };
   bumpUser(req.userId);
   return { ok: true, jobId, data };
+}
+
+/* คำให้การ แบบกรอกเอง (ไม่อัปโหลดคำฟ้อง): ไม่เรียก AI แค่ตรวจสิทธิ์ นับโควตา และออกเลขงาน */
+function aStart(req) {
+  const stop = checkAllowed(req.userId);
+  if (stop) return { ok: false, error: stop };
+  const jobId = Utilities.getUuid().slice(0, 8);
+  logJob(jobId, req.userId, 'a_start', 0, { court: clean(req.court, 80), caseKind: clean(req.caseKind, 30), matter: clean(req.matter, 80) }, null, 0, 'ok', '');
+  bumpUser(req.userId);
+  return { ok: true, jobId };
 }
 
 /* ผู้ใช้กรอกข้อมูลเอง: ไม่เรียก AI แค่ตรวจสิทธิ์ นับโควตา และออกเลขงาน */
@@ -521,8 +614,7 @@ function nCheck(req) {
   const meta = { court: '', caseKind: 'หนังสือ/สัญญา', matter: N_TYPES[type] };
   let res, data;
   try {
-    res = callClaude([{ role: 'user', content }], 4000, N_CHECK_SYS, 'low');
-    data = parseJson(res.text);
+    ({ res, data } = readJson(content, 4000, N_CHECK_SYS, 'low', { jobId, userId: req.userId, stage: 'n_check', files: (req.files || []).length, meta }));
     if (!data) throw new Error('no json');
   } catch (err) {
     logJob(jobId, req.userId, 'n_check', (req.files || []).length, meta, res, Date.now() - t0, 'error', String(err.message || err));
